@@ -14,7 +14,10 @@ limitations under the License.
 
 import keras
 from utils.eval import evaluate
+from azureml.core import Run
 
+# start an Azure ML run
+run = Run.get_context()
 
 class Evaluate(keras.callbacks.Callback):
     """ Evaluation callback for arbitrary datasets.
@@ -93,61 +96,71 @@ class Evaluate(keras.callbacks.Callback):
             summary_value.simple_value = self.mean_ap
             summary_value.tag = "mAP"
             self.tensorboard.writer.add_summary(summary, epoch)
+            run.log('mAP', self.mean_ap)
             
             self.mIoU = np.mean(iou)
             summary_value = summary.value.add()
             summary_value.simple_value = self.mIoU
             summary_value.tag = "mIoU"
             self.tensorboard.writer.add_summary(summary, epoch)
+            run.log('mIoU', self.mIoU)
             
             self.EAD_Score = 0.8*self.mean_ap + 0.2*self.mIoU
             summary_value = summary.value.add()
             summary_value.simple_value = self.EAD_Score
             summary_value.tag = "EAD Score"
             self.tensorboard.writer.add_summary(summary, epoch)    
-            
+            run.log('EAD_Score', self.EAD_Score)
+
             self.AP1 = precisions[0]
             total_instances.append(num_annotations)
             summary_value = summary.value.add()
             summary_value.simple_value = self.AP1
             summary_value.tag = "specularity mAP"
             self.tensorboard.writer.add_summary(summary, epoch)
+            run.log('specularity mAP', self.AP1)
             
             self.AP2 = precisions[1]
             summary_value = summary.value.add()
             summary_value.simple_value = self.AP2
             summary_value.tag = "saturation mAP"
             self.tensorboard.writer.add_summary(summary, epoch)
+            run.log('saturation mAP', self.AP2)
             
             self.AP3 = precisions[2]
             summary_value = summary.value.add()
             summary_value.simple_value = self.AP3
             summary_value.tag = "artifact mAP"
             self.tensorboard.writer.add_summary(summary, epoch)
+            run.log('artifact mAP', self.AP3)
             
             self.AP4 = precisions[3]
             summary_value = summary.value.add()
             summary_value.simple_value = self.AP4
             summary_value.tag = "blur mAP"
-            self.tensorboard.writer.add_summary(summary, epoch)            
+            self.tensorboard.writer.add_summary(summary, epoch)     
+            run.log('blur mAP', self.AP4)       
 
             self.AP5 = precisions[4]
             summary_value = summary.value.add()
             summary_value.simple_value = self.AP5
             summary_value.tag = "contrast mAP"
             self.tensorboard.writer.add_summary(summary, epoch) 
+            run.log('contrast mAP', self.AP5)
             
             self.AP6 = precisions[5]
             summary_value = summary.value.add()
             summary_value.simple_value = self.AP6
             summary_value.tag = "bubbles mAP"
             self.tensorboard.writer.add_summary(summary, epoch) 
+            run.log('bubbles mAP', self.AP6)
             
             self.AP7 = precisions[6]
             summary_value = summary.value.add()
             summary_value.simple_value = self.AP7
             summary_value.tag = "instrument mAP"
             self.tensorboard.writer.add_summary(summary, epoch) 
+            run.log('instrument mAP', self.AP7)
             
         logs['mAP'] = self.mean_ap
         logs["mIoU"] = self.mIoU

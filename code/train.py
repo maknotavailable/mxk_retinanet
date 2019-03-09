@@ -161,6 +161,13 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
         )
         callbacks.append(tensorboard_callback)
 
+    if args.aml:
+        from azureml.core import Run
+        # start an Azure ML run
+        run = Run.get_context()
+        run.log('batch-size', args.batch_size)
+
+
     if args.evaluation and validation_generator:
         if args.dataset_type == 'coco':
             from callbacks.coco import CocoEval
@@ -376,9 +383,9 @@ def parse_args(args):
     oid_parser.add_argument('--annotation-cache-dir', help='Path to store annotation cache.', default='.')
     oid_parser.add_argument('--parent-label', help='Use the hierarchy children of this label.', default=None)
 
-    csv_parser = subparsers.add_parser('csv')
-    csv_parser.add_argument('annotations', help='Path to CSV file containing annotations for training.')
-    csv_parser.add_argument('classes', help='Path to a CSV file containing class label mapping.')
+    csv_parser = subparsers.add_parser('--csv')
+    csv_parser.add_argument('--annotations', help='Path to CSV file containing annotations for training.')
+    csv_parser.add_argument('--classes', help='Path to a CSV file containing class label mapping.')
     csv_parser.add_argument('--val-annotations', help='Path to CSV file containing annotations for validation (optional).')
 
     group = parser.add_mutually_exclusive_group()
@@ -408,6 +415,7 @@ def parse_args(args):
     ## added these maself
     parser.add_argument('--fl-gamma',         help='Gamma value for Focal Loss.', type=float, default=2)
     parser.add_argument('--fl-alpha',         help='Alpha value for Focal Loss.', type=float, default=0.25)
+    parser.add_argument('--aml',  help='Log with AML services', action='store_false')
 
     # Fit generator arguments
     parser.add_argument('--workers', help='Number of multiprocessing workers. To disable multiprocessing, set workers to 0', type=int, default=1)
