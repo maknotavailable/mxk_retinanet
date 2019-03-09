@@ -1,0 +1,41 @@
+# Conda environment specification. The dependencies defined in this file will
+# be automatically provisioned for runs with userManagedDependencies=False.
+
+
+# Details about the Conda environment file format:
+# https://conda.io/docs/user-guide/tasks/manage-environments.html#create-env-file-manually
+
+# NOTE: the packages commented are used for local development, and not needed for deployment
+
+name: mxk
+dependencies:
+  # The python interpreter version.
+  # Currently Azure ML only supports 3.5.2 and later.
+- python=3.6.6
+- conda-forge::tensorflow==1.10.0
+- pip:
+  - azureml-defaults==1.0.15
+  - cython
+  - keras-resnet
+  - git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonAPI
+  - h5py
+  - keras
+  - numpy
+  - opencv-python
+  - pillow
+
+
+# ['keras', 'keras-resnet', 'six', 'scipy', 'cython', 'Pillow', 'opencv-python', 'progressbar2']
+#     - pip install 'cython'
+#     - pip install 'keras-resnet'
+#     - pip install 'git+https://github.com/cocodataset/cocoapi.git#subdirectory=PythonAPI'
+#     - pip install 'h5py'
+#     - pip install 'keras'
+#     - pip install 'matplotlib'
+#     - pip install 'numpy>=1.14'
+#     - pip install 'opencv-python>=3.3.0'
+#     - pip install 'pillow'
+#     - pip install 'progressbar2'
+#     - pip install 'pytest-flake8'
+#     - pip install 'pytest-xdist'
+#     - pip install 'tensorflow'
