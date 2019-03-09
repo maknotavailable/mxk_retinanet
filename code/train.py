@@ -375,15 +375,15 @@ def parse_args(args):
     # kitti_parser = subparsers.add_parser('kitti')
     # kitti_parser.add_argument('kitti_path', help='Path to dataset directory (ie. /tmp/kitti).')
 
-    def csv_list(string):
-        return string.split(',')
+    # def csv_list(string):
+    #     return string.split(',')
 
-    oid_parser = parser.add_parser('oid')
-    oid_parser.add_argument('main_dir', help='Path to dataset directory.')
-    oid_parser.add_argument('--version',  help='The current dataset version is v4.', default='v4')
-    oid_parser.add_argument('--labels-filter',  help='A list of labels to filter.', type=csv_list, default=None)
-    oid_parser.add_argument('--annotation-cache-dir', help='Path to store annotation cache.', default='.')
-    oid_parser.add_argument('--parent-label', help='Use the hierarchy children of this label.', default=None)
+    # oid_parser = parser.add_parser('oid')
+    # oid_parser.add_argument('main_dir', help='Path to dataset directory.')
+    # oid_parser.add_argument('--version',  help='The current dataset version is v4.', default='v4')
+    # oid_parser.add_argument('--labels-filter',  help='A list of labels to filter.', type=csv_list, default=None)
+    # oid_parser.add_argument('--annotation-cache-dir', help='Path to store annotation cache.', default='.')
+    # oid_parser.add_argument('--parent-label', help='Use the hierarchy children of this label.', default=None)
 
     # csv_parser = subparsers.add_parser('csv')
     group = parser.add_mutually_exclusive_group()
