@@ -15,13 +15,15 @@ limitations under the License.
 import argparse
 import os
 import sys
-# sys.path.append('../')
 sys.path.append('./layers')
 sys.path.append('./backend')
 sys.path.append('./models')
 sys.path.append('./preprocessing')
 sys.path.append('./utils')
 sys.path.append('./keras_resnet')
+
+from azureml.core import Run
+run = Run.get_context()
 
 dataset_type = 'csv'
 
@@ -163,12 +165,6 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
         )
         callbacks.append(tensorboard_callback)
 
-    if args.aml:
-        from azureml.core import Run
-        # start an Azure ML run
-        run = Run.get_context()
-        run.log('batch-size', args.batch_size)
-
 
     if args.evaluation and validation_generator:
         if dataset_type == 'coco':
@@ -184,11 +180,11 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
     # save the model
     if args.snapshots:
         # ensure directory created first; otherwise h5py will error after epoch.
-        makedirs(args.snapshot_path)
+        makedirs(os.path.join(args.data_dir, args.snapshot_path))
         ## keras.callbacks.ModelCheckpoint: save model after every epoch
         checkpoint = keras.callbacks.ModelCheckpoint(
             os.path.join(
-                args.snapshot_path,
+                os.path.join(args.data_dir, args.snapshot_path),
                 '{backbone}_{dataset_type}_{{epoch:02d}}_{{EAD_Score:.2f}}.h5'.format(backbone=args.backbone, dataset_type=dataset_type)
             ),
             ## I'm adding these things to always save a model (and overwrite) if it improves the score
@@ -229,21 +225,21 @@ def create_generators(args, preprocess_image):
     }
 
     # create random transform generator for augmenting training data
-    if args.random_transform:
-        transform_generator = random_transform_generator(
-            min_rotation=-0.1,
-            max_rotation=0.1,
-            min_translation=(-0.1, -0.1),
-            max_translation=(0.1, 0.1),
-            min_shear=-0.1,
-            max_shear=0.1,
-            min_scaling=(0.9, 0.9),
-            max_scaling=(1.1, 1.1),
-            flip_x_chance=0.5,
-            flip_y_chance=0.5,
-        )
-    else:
-        transform_generator = random_transform_generator(flip_x_chance=0.5)
+    # if args.random_transform:
+    transform_generator = random_transform_generator(
+        min_rotation=-0.1,
+        max_rotation=0.1,
+        min_translation=(-0.1, -0.1),
+        max_translation=(0.1, 0.1),
+        min_shear=-0.1,
+        max_shear=0.1,
+        min_scaling=(0.9, 0.9),
+        max_scaling=(1.1, 1.1),
+        flip_x_chance=0.5,
+        flip_y_chance=0.5,
+    )
+    # else:
+        # transform_generator = random_transform_generator(flip_x_chance=0.5)
 
     if dataset_type == 'coco':
         # import here to prevent unnecessary dependency on cocoapi
@@ -276,16 +272,16 @@ def create_generators(args, preprocess_image):
         )
     elif dataset_type == 'csv':
         train_generator = CSVGenerator(
-            args.annotations,
-            args.classes,
+            os.path.join(args.data_dir, args.annotations),
+            os.path.join(args.data_dir, args.classes),
             transform_generator=transform_generator,
             **common_args
         )
 
         if args.val_annotations:
             validation_generator = CSVGenerator(
-                args.val_annotations,
-                args.classes,
+                os.path.join(args.data_dir, args.val_annotations) ,
+                os.path.join(args.data_dir, args.classes),
                 **common_args
             )
         else:
@@ -363,40 +359,14 @@ def parse_args(args):
     """ Parse the arguments.
     """
     parser     = argparse.ArgumentParser(description='Simple training script for training a RetinaNet network.')
-    # subparsers = parser.add_subparsers(help='Arguments for specific dataset types.', dest='dataset_type', default='csv')
-    # subparsers.required = True
-
-    # coco_parser = subparsers.add_parser('coco')
-    # coco_parser.add_argument('coco_path', help='Path to dataset directory (ie. /tmp/COCO).')
-
-    # pascal_parser = subparsers.add_parser('pascal')
-    # pascal_parser.add_argument('pascal_path', help='Path to dataset directory (ie. /tmp/VOCdevkit).')
-
-    # kitti_parser = subparsers.add_parser('kitti')
-    # kitti_parser.add_argument('kitti_path', help='Path to dataset directory (ie. /tmp/kitti).')
-
-    # def csv_list(string):
-    #     return string.split(',')
-
-    # oid_parser = parser.add_parser('oid')
-    # oid_parser.add_argument('main_dir', help='Path to dataset directory.')
-    # oid_parser.add_argument('--version',  help='The current dataset version is v4.', default='v4')
-    # oid_parser.add_argument('--labels-filter',  help='A list of labels to filter.', type=csv_list, default=None)
-    # oid_parser.add_argument('--annotation-cache-dir', help='Path to store annotation cache.', default='.')
-    # oid_parser.add_argument('--parent-label', help='Use the hierarchy children of this label.', default=None)
-
-    # csv_parser = subparsers.add_parser('csv')
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--annotations', help='Path to CSV file containing annotations for training.')
-    group.add_argument('--classes', help='Path to a CSV file containing class label mapping.')
-    group.add_argument('--val-annotations', help='Path to CSV file containing annotations for validation (optional).')
-
-    
-    group.add_argument('--snapshot',          help='Resume training from a snapshot.')
-    group.add_argument('--imagenet-weights',  help='Initialize the model with pretrained imagenet weights. This is the default behaviour.', action='store_const', const=True, default=True)
-    group.add_argument('--weights',           help='Initialize the model with weights from a file.')
-    group.add_argument('--no-weights',        help='Don\'t initialize the model with any weights.', dest='imagenet_weights', action='store_const', const=False)
-
+    parser.add_argument('--data-dir', help='Main data directory', dest='data_dir')
+    parser.add_argument('--annotations', help='Path to CSV file containing annotations for training.')
+    parser.add_argument('--classes', help='Path to a CSV file containing class label mapping.')
+    parser.add_argument('--val-annotations', help='Path to CSV file containing annotations for validation (optional).')
+    parser.add_argument('--snapshot',          help='Resume training from a snapshot.')
+    parser.add_argument('--imagenet-weights',  help='Initialize the model with pretrained imagenet weights. This is the default behaviour.', action='store_const', const=True, default=True)
+    parser.add_argument('--weights',           help='Initialize the model with weights from a file.')
+    parser.add_argument('--no-weights',        help='Don\'t initialize the model with any weights.', dest='imagenet_weights', action='store_const', const=False)
     parser.add_argument('--backbone',         help='Backbone model used by retinanet.', default='resnet50', type=str)
     parser.add_argument('--batch-size',       help='Size of the batches.', default=1, type=int)
     parser.add_argument('--gpu',              help='Id of the GPU to use (as reported by nvidia-smi).')
@@ -410,7 +380,7 @@ def parse_args(args):
     parser.add_argument('--no-snapshots',     help='Disable saving snapshots.', dest='snapshots', action='store_false')
     parser.add_argument('--no-evaluation',    help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
     parser.add_argument('--freeze-backbone',  help='Freeze training of backbone layers.', action='store_true')
-    parser.add_argument('--random-transform', help='Randomly transform image and annotations.', action='store_true')
+    # parser.add_argument('--random-transform', help='Randomly transform image and annotations.', action='store_true')
     parser.add_argument('--image-min-side',   help='Rescale the image so the smallest side is min_side.', type=int, default=800)
     parser.add_argument('--image-max-side',   help='Rescale the image if the largest side is larger than max_side.', type=int, default=1333)
     parser.add_argument('--config',           help='Path to a configuration parameters .ini file.')
@@ -418,7 +388,7 @@ def parse_args(args):
     ## added these maself
     parser.add_argument('--fl-gamma',         help='Gamma value for Focal Loss.', type=float, default=2)
     parser.add_argument('--fl-alpha',         help='Alpha value for Focal Loss.', type=float, default=0.25)
-    parser.add_argument('--aml',  help='Log with AML services', action='store_false')
+    # parser.add_argument('--aml',  help='Log with AML services', action='store_false')
 
     # Fit generator arguments
     parser.add_argument('--workers', help='Number of multiprocessing workers. To disable multiprocessing, set workers to 0', type=int, default=1)
@@ -454,14 +424,14 @@ def main(args=None):
     # create the model
     if args.snapshot is not None:
         print('Loading model, this may take a second...')
-        model            = models.load_model(args.snapshot, backbone_name=args.backbone)
+        model            = models.load_model(os.path.join(args.data_dir, args.snapshot), backbone_name=args.backbone)
         training_model   = model
         anchor_params    = None
         if args.config and 'anchor_parameters' in args.config:
             anchor_params = parse_anchor_parameters(args.config)
         prediction_model = retinanet_bbox(model=model, anchor_params=anchor_params)
     else:
-        weights = args.weights
+        weights = os.path.join(args.data_dir, args.weights)
         # default to imagenet if nothing else is specified
         ## SO the file that is downloaded is actually only the weights
         ## this means that I should be able to use --weights to give it my own model
@@ -517,6 +487,12 @@ def main(args=None):
         max_queue_size=args.max_queue_size
     )
 
+    # Log configs
+    run.log('batch-size', args.batch_size)
+    run.log('gamma', args.fl_gamma)
+    run.log('alpha', args.fl_alpha)
+    run.log('lr', args.lr)
 
-#if __name__ == '__main__':
-#    main()
+
+if __name__ == '__main__':
+   main()
