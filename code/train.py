@@ -361,7 +361,7 @@ def parse_args(args):
     """ Parse the arguments.
     """
     parser     = argparse.ArgumentParser(description='Simple training script for training a RetinaNet network.')
-    subparsers = parser.add_subparsers(help='Arguments for specific dataset types.', dest='dataset_type')
+    subparsers = parser.add_subparsers(help='Arguments for specific dataset types.', dest='dataset_type', default='csv')
     subparsers.required = True
 
     coco_parser = subparsers.add_parser('coco')
@@ -383,12 +383,13 @@ def parse_args(args):
     oid_parser.add_argument('--annotation-cache-dir', help='Path to store annotation cache.', default='.')
     oid_parser.add_argument('--parent-label', help='Use the hierarchy children of this label.', default=None)
 
-    csv_parser = subparsers.add_parser('csv')
-    csv_parser.add_argument('--annotations', help='Path to CSV file containing annotations for training.')
-    csv_parser.add_argument('--classes', help='Path to a CSV file containing class label mapping.')
-    csv_parser.add_argument('--val-annotations', help='Path to CSV file containing annotations for validation (optional).')
-
+    # csv_parser = subparsers.add_parser('csv')
     group = parser.add_mutually_exclusive_group()
+    group.add_argument('--annotations', help='Path to CSV file containing annotations for training.')
+    group.add_argument('--classes', help='Path to a CSV file containing class label mapping.')
+    group.add_argument('--val-annotations', help='Path to CSV file containing annotations for validation (optional).')
+
+    
     group.add_argument('--snapshot',          help='Resume training from a snapshot.')
     group.add_argument('--imagenet-weights',  help='Initialize the model with pretrained imagenet weights. This is the default behaviour.', action='store_const', const=True, default=True)
     group.add_argument('--weights',           help='Initialize the model with weights from a file.')
