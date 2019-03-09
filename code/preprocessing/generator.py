@@ -20,20 +20,20 @@ import warnings
 
 import keras
 
-from ..utils.anchors import (
+from utils.anchors import (
     anchor_targets_bbox,
     anchors_for_shape,
     guess_shapes
 )
-from ..utils.config import parse_anchor_parameters
-from ..utils.image import (
+from utils.config import parse_anchor_parameters
+from utils.image import (
     TransformParameters,
     adjust_transform_for_image,
     apply_transform,
     preprocess_image,
     resize_image,
 )
-from ..utils.transform import transform_aabb
+from utils.transform import transform_aabb
 
 
 class Generator(keras.utils.Sequence):

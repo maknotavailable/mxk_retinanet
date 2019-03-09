@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 import keras
-from .. import backend
+import backend
 
 
 def filter_detections(

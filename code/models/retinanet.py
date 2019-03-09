@@ -15,11 +15,16 @@ limitations under the License.
 """
 
 import keras
-from .. import initializers
-from .. import layers
-from ..utils.anchors import AnchorParameters
-from . import assert_training_model
+import initializers
+import layers
+from utils.anchors import AnchorParameters
+# from . import assert_training_model # TODO: what is this?
 
+def assert_training_model(model):
+    """ Assert that the model is a training model.
+    """
+    assert(all(output in model.output_names for output in ['regression', 'classification'])), \
+        "Input is not a training model (no 'regression' and 'classification' outputs were found, outputs are: {}).".format(model.output_names)
 
 def default_classification_model(
     num_classes,
@@ -324,7 +329,7 @@ def retinanet_bbox(
     if model is None:
         model = retinanet(num_anchors=anchor_params.num_anchors(), **kwargs)
     else:
-        assert_training_model(model)
+        assert_training_model(model) 
 
     # compute the anchors
     features = [model.get_layer(p_name).output for p_name in ['P3', 'P4', 'P5', 'P6', 'P7']]

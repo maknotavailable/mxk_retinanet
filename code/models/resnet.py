@@ -17,11 +17,11 @@ limitations under the License.
 import keras
 from keras.utils import get_file
 import keras_resnet
-import keras_resnet.models
+from keras_resnet import models
 
 from . import retinanet
 from . import Backbone
-from ..utils.image import preprocess_image
+from utils.image import preprocess_image
 
 
 class ResNetBackbone(Backbone):

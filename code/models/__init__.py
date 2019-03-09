@@ -7,9 +7,9 @@ class Backbone(object):
     """
     def __init__(self, backbone):
         # a dictionary mapping custom layer names to the correct classes
-        from .. import layers
-        from .. import losses
-        from .. import initializers
+        import layers
+        import losses
+        import initializers
         self.custom_objects = {
             'UpsampleLike'     : layers.UpsampleLike,
             'PriorProbability' : initializers.PriorProbability,

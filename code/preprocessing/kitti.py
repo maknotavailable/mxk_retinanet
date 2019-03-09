@@ -21,7 +21,7 @@ import numpy as np
 from PIL import Image
 
 from .generator import Generator
-from ..utils.image import read_image_bgr
+from utils.image import read_image_bgr
 
 kitti_classes = {
     'Car': 0,

@@ -17,7 +17,7 @@ limitations under the License.
 import keras
 from keras.applications import mobilenet
 from keras.utils import get_file
-from ..utils.image import preprocess_image
+from utils.image import preprocess_image
 
 from . import retinanet
 from . import Backbone

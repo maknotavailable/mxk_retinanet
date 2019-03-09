@@ -20,7 +20,7 @@ from keras.utils import get_file
 
 from . import retinanet
 from . import Backbone
-from ..utils.image import preprocess_image
+from utils.image import preprocess_image
 
 
 class VGGBackbone(Backbone):
