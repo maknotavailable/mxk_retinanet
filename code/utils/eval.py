@@ -11,8 +11,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from keras_retinanet.utils.anchors import compute_overlap
-#from keras_retinanet.utils.visualization import draw_detections, draw_annotations
+from utils.anchors import compute_overlap
+from utils.visualization import draw_detections, draw_annotations
 
 import keras
 import numpy as np

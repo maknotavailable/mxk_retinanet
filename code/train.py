@@ -35,7 +35,7 @@ import layers  # noqa: F401
 import losses
 import models
 from callbacks import RedirectModel
-#from keras_retinanet.callbacks.eval import Evaluate
+from callbacks.eval import Evaluate
 from models.retinanet import retinanet_bbox
 from preprocessing.csv_generator import CSVGenerator
 from preprocessing.kitti import KittiGenerator

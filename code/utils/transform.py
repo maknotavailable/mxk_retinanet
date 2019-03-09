@@ -222,7 +222,7 @@ def random_transform(
       * flip x (if applied)
       * flip y (if applied)
 
-    Note that by default, the data generators in `keras_retinanet.preprocessing.generators` interpret the translation
+    Note that by default, the data generators in `preprocessing.generators` interpret the translation
     as factor of the image size. So an X translation of 0.1 would translate the image by 10% of it's width.
     Set `relative_translation` to `False` in the `TransformParameters` of a data generator to have it interpret
     the translation directly as pixel distances instead.
@@ -262,7 +262,7 @@ def random_transform_generator(prng=None, **kwargs):
       * flip x (if applied)
       * flip y (if applied)
 
-    Note that by default, the data generators in `keras_retinanet.preprocessing.generators` interpret the translation
+    Note that by default, the data generators in `preprocessing.generators` interpret the translation
     as factor of the image size. So an X translation of 0.1 would translate the image by 10% of it's width.
     Set `relative_translation` to `False` in the `TransformParameters` of a data generator to have it interpret
     the translation directly as pixel distances instead.

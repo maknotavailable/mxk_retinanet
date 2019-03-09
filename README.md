@@ -25,7 +25,7 @@ Where `boxes` are shaped `(None, None, 4)` (for `(x1, y1, x2, y2)`), scores is s
 
 Loading models can be done in the following manner:
 ```python
-from keras_retinanet.models import load_model
+from models import load_model
 model = load_model('/path/to/model.h5', backbone_name='resnet50')
 ```
 
@@ -142,18 +142,18 @@ retinanet-train csv /path/to/csv/file/containing/annotations /path/to/csv/file/c
 ```
 
 In general, the steps to train on your own datasets are:
-1) Create a model by calling for instance `keras_retinanet.models.backbone('resnet50').retinanet(num_classes=80)` and compile it.
+1) Create a model by calling for instance `models.backbone('resnet50').retinanet(num_classes=80)` and compile it.
    Empirically, the following compile arguments have been found to work well:
 ```python
 model.compile(
     loss={
-        'regression'    : keras_retinanet.losses.smooth_l1(),
-        'classification': keras_retinanet.losses.focal()
+        'regression'    : losses.smooth_l1(),
+        'classification': losses.focal()
     },
     optimizer=keras.optimizers.adam(lr=1e-5, clipnorm=0.001)
 )
 ```
-2) Create generators for training and testing data (an example is show in [`keras_retinanet.preprocessing.pascal_voc.PascalVocGenerator`](https://github.com/fizyr/keras-retinanet/blob/master/keras_retinanet/preprocessing/pascal_voc.py)).
+2) Create generators for training and testing data (an example is show in [`preprocessing.pascal_voc.PascalVocGenerator`](https://github.com/fizyr/keras-retinanet/blob/master/keras_retinanet/preprocessing/pascal_voc.py)).
 3) Use `model.fit_generator` to start training.
 
 ## CSV datasets
@@ -255,7 +255,7 @@ Feel free to join the `#keras-retinanet` [Keras Slack](https://keras-slack-autoj
 * **How do I change the number / shape of the anchors?** The train tool allows to pass a configuration file, where the anchor parameters can be adjusted. Check [here](https://github.com/fizyr/keras-retinanet-test-data/blob/master/config/config.ini) for an example config file.
 * **I get a loss of `0`, what is going on?** This mostly happens when none of the anchors "fit" on your objects, because they are most likely too small or elongated. You can verify this using the [debug](https://github.com/fizyr/keras-retinanet#debugging) tool.
 * **I have an older model, can I use it after an update of keras-retinanet?** This depends on what has changed. If it is a change that doesn't affect the weights then you can "update" models by creating a new retinanet model, loading your old weights using `model.load_weights(weights_path, by_name=True)` and saving this model. If the change has been too significant, you should retrain your model (you can try to load in the weights from your old model when starting training, this might be a better starting position than ImageNet).
-* **I get the error `ModuleNotFoundError: No module named 'keras_retinanet.utils.compute_overlap'`, how do I fix this?** Most likely you are running the code from the cloned repository. This is fine, but you need to compile some extensions for this to work (`python setup.py build_ext --inplace`).
+* **I get the error `ModuleNotFoundError: No module named 'utils.compute_overlap'`, how do I fix this?** Most likely you are running the code from the cloned repository. This is fine, but you need to compile some extensions for this to work (`python setup.py build_ext --inplace`).
 * **How do I train on my own dataset?** The steps to train on your dataset are roughly as follows:
 * 1. Prepare your dataset in the CSV format (a training and validation split is advised).
 * 2. Check that your dataset is correct using `retinanet-debug`.
