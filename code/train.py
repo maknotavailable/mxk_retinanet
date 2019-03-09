@@ -275,6 +275,7 @@ def create_generators(args, preprocess_image):
             os.path.join(args.data_dir, args.annotations),
             os.path.join(args.data_dir, args.classes),
             transform_generator=transform_generator,
+            base_dir=args.data_dir,
             **common_args
         )
 
@@ -282,6 +283,7 @@ def create_generators(args, preprocess_image):
             validation_generator = CSVGenerator(
                 os.path.join(args.data_dir, args.val_annotations) ,
                 os.path.join(args.data_dir, args.classes),
+                base_dir=args.data_dir,
                 **common_args
             )
         else:

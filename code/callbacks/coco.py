@@ -15,8 +15,11 @@ limitations under the License.
 """
 
 import keras
-utils.coco_eval import evaluate_coco
+from utils.coco_eval import evaluate_coco
+from azureml.core import Run
 
+# start an Azure ML run
+run = Run.get_context()
 
 class CocoEval(keras.callbacks.Callback):
     """ Performs COCO evaluation on each epoch.
@@ -60,3 +63,4 @@ class CocoEval(keras.callbacks.Callback):
                 summary_value.tag = '{}. {}'.format(index + 1, coco_tag[index])
                 self.tensorboard.writer.add_summary(summary, epoch)
                 logs[coco_tag[index]] = result
+                run.log('{}. {}'.format(index + 1, coco_tag[index]), summary)

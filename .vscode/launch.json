@@ -12,7 +12,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--data-dir",
-                "../assets/",
+                "C:/Users/makayser/Desktop/git/mxk_retinanet/assets",
                 "--epochs",
                 "5",
                 "--steps",
