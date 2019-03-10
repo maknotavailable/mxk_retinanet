@@ -14,6 +14,7 @@ limitations under the License.
 
 import keras
 from utils.eval import evaluate
+import numpy as np
 from azureml.core import Run
 
 # start an Azure ML run

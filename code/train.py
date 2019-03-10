@@ -186,7 +186,7 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
             checkpoint = keras.callbacks.ModelCheckpoint(
                 os.path.join(
                     args.snapshot_path,
-                    '{backbone}_{dataset_type}_{{epoch:02d}}_{{EAD_Score:.2f}}.h5'.format(backbone=args.backbone, dataset_type=args.dataset_type)
+                    '{backbone}_{dataset_type}_{{epoch:02d}}_{{EAD_Score:.2f}}.h5'.format(backbone=args.backbone, dataset_type=dataset_type)
                 ),
                 ## I'm adding these things to always save a model (and overwrite) if it improves the score
                 verbose=1,
@@ -198,7 +198,7 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
             checkpoint = keras.callbacks.ModelCheckpoint(
                 os.path.join(
                     args.snapshot_path,
-                    '{backbone}_{dataset_type}_{{epoch:02d}}_{{loss:.2f}}.h5'.format(backbone=args.backbone, dataset_type=args.dataset_type)
+                    '{backbone}_{dataset_type}_{{epoch:02d}}_{{loss:.2f}}.h5'.format(backbone=args.backbone, dataset_type=dataset_type)
                 ),
                 ## I'm adding these things to always save a model (and overwrite) if it improves the score
                 verbose=1,
