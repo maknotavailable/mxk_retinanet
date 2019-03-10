@@ -448,12 +448,13 @@ def main(args=None):
             anchor_params = parse_anchor_parameters(args.config)
         prediction_model = retinanet_bbox(model=model, anchor_params=anchor_params)
     else:
-        weights = os.path.join(args.data_dir, args.weights)
+        if args.weights is None and args.imagenet_weights:
+          weights = backbone.download_imagenet()
+        else:
+          weights = os.path.join(args.data_dir, args.weights)
         # default to imagenet if nothing else is specified
         ## SO the file that is downloaded is actually only the weights
         ## this means that I should be able to use --weights to give it my own model
-        if weights is None and args.imagenet_weights:
-            weights = backbone.download_imagenet()
 
         print('Creating model, this may take a second...')
         model, training_model, prediction_model = create_models(
