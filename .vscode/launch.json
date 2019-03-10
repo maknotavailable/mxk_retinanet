@@ -28,7 +28,9 @@
                 "--annotations",
                 "train_set_v2_retina.csv",
                 "--classes",
-                "classes.csv"
+                "classes.csv",
+                "--batch-size",
+                "32"
             ]  
         },
         {

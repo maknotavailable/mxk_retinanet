@@ -275,7 +275,7 @@ def create_generators(args, preprocess_image):
             os.path.join(args.data_dir, args.annotations),
             os.path.join(args.data_dir, args.classes),
             transform_generator=transform_generator,
-            base_dir=args.data_dir,
+            base_dir=os.path.join(args.data_dir,args.train_dir),
             **common_args
         )
 
@@ -283,7 +283,7 @@ def create_generators(args, preprocess_image):
             validation_generator = CSVGenerator(
                 os.path.join(args.data_dir, args.val_annotations) ,
                 os.path.join(args.data_dir, args.classes),
-                base_dir=args.data_dir,
+                base_dir=os.path.join(args.data_dir,args.val_dir),
                 **common_args
             )
         else:
@@ -362,6 +362,8 @@ def parse_args(args):
     """
     parser     = argparse.ArgumentParser(description='Simple training script for training a RetinaNet network.')
     parser.add_argument('--data-dir', help='Main data directory', dest='data_dir')
+    parser.add_argument('--train-dir', help='Train data directory', dest='train_dir', default='train')
+    parser.add_argument('--val-dir', help='Val data directory', dest='val_dir', default='val')
     parser.add_argument('--annotations', help='Path to CSV file containing annotations for training.')
     parser.add_argument('--classes', help='Path to a CSV file containing class label mapping.')
     parser.add_argument('--val-annotations', help='Path to CSV file containing annotations for validation (optional).')
@@ -377,8 +379,8 @@ def parse_args(args):
     parser.add_argument('--epochs',           help='Number of epochs to train.', type=int, default=50)
     parser.add_argument('--steps',            help='Number of steps per epoch.', type=int, default=10000)
     parser.add_argument('--lr',               help='Learning rate.', type=float, default=1e-5)
-    parser.add_argument('--snapshot-path',    help='Path to store snapshots of models during training (defaults to \'./snapshots\')', default='./snapshots')
-    parser.add_argument('--tensorboard-dir',  help='Log directory for Tensorboard output', default='./logs')
+    parser.add_argument('--snapshot-path',    help='Path to store snapshots of models during training (defaults to \'./snapshots\')', default='snapshots')
+    parser.add_argument('--tensorboard-dir',  help='Log directory for Tensorboard output', default='logs')
     parser.add_argument('--no-snapshots',     help='Disable saving snapshots.', dest='snapshots', action='store_false')
     parser.add_argument('--no-evaluation',    help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
     parser.add_argument('--freeze-backbone',  help='Freeze training of backbone layers.', action='store_true')
