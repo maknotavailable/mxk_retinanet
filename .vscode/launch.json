@@ -12,11 +12,11 @@
             "console": "integratedTerminal",
             "args": [
                 "--data-dir",
-                "../assets/",
+                "/Users/maximekayser/Python_Projects/EAD2019/Data",
                 "--epochs",
                 "5",
                 "--steps",
-                "2300",
+                "2",
                 "--fl-gamma",
                 "1.5",
                 "--fl-alpha",
