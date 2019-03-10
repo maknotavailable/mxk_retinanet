@@ -405,7 +405,6 @@ def parse_args(args):
     ## added these maself
     parser.add_argument('--fl-gamma',         help='Gamma value for Focal Loss.', type=float, default=2)
     parser.add_argument('--fl-alpha',         help='Alpha value for Focal Loss.', type=float, default=0.25)
-    # parser.add_argument('--aml',  help='Log with AML services', action='store_false')
 
     # Fit generator arguments
     parser.add_argument('--workers', help='Number of multiprocessing workers. To disable multiprocessing, set workers to 0', type=int, default=1)
@@ -419,6 +418,13 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
     args = parse_args(args)
+
+    # Log configs
+    run.log('batch-size', args.batch_size)
+    run.log('gamma', args.fl_gamma)
+    run.log('alpha', args.fl_alpha)
+    run.log('lr', args.lr)
+    print('[INFO] - Batch Size: ' ,args.batch_size)
 
     # create object that stores backbone information
     backbone = models.backbone(args.backbone)
@@ -503,12 +509,6 @@ def main(args=None):
         use_multiprocessing=use_multiprocessing,
         max_queue_size=args.max_queue_size
     )
-
-    # Log configs
-    run.log('batch-size', args.batch_size)
-    run.log('gamma', args.fl_gamma)
-    run.log('alpha', args.fl_alpha)
-    run.log('lr', args.lr)
 
 
 if __name__ == '__main__':

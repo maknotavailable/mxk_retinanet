@@ -337,3 +337,4 @@ ASALocalRun/
 
 # Model folder
 assets/
+.vscode/
