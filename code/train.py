@@ -186,11 +186,11 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
             checkpoint = keras.callbacks.ModelCheckpoint(
                 os.path.join(
                     args.snapshot_path,
-                    '{backbone}_{dataset_type}_{{epoch:02d}}_{{EAD_Score:.2f}}.h5'.format(backbone=args.backbone, dataset_type=dataset_type)
+                    '{backbone}_{dataset_type}_p{prev_epoch}_{{epoch:02d}}_{{EAD_Score:.2f}}.h5'.format(backbone=args.backbone, dataset_type=dataset_type, prev_epoch=args.previous_epoch)
                 ),
                 ## I'm adding these things to always save a model (and overwrite) if it improves the score
                 verbose=1,
-                save_best_only=True,
+                save_best_only=False,
                 monitor="EAD_Score",
                 mode='max'
             )
@@ -198,11 +198,11 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
             checkpoint = keras.callbacks.ModelCheckpoint(
                 os.path.join(
                     args.snapshot_path,
-                    '{backbone}_{dataset_type}_{{epoch:02d}}_{{loss:.2f}}.h5'.format(backbone=args.backbone, dataset_type=dataset_type)
+                    '{backbone}_{dataset_type}_p{prev_epoch}_{{epoch:02d}}_{{loss:.2f}}.h5'.format(backbone=args.backbone, dataset_type=dataset_type, prev_epoch=args.previous_epoch)
                 ),
                 ## I'm adding these things to always save a model (and overwrite) if it improves the score
                 verbose=1,
-                save_best_only=True,
+                save_best_only=False,
                 monitor="loss",
                 mode='min'
             ) 
@@ -405,6 +405,7 @@ def parse_args(args):
     ## added these maself
     parser.add_argument('--fl-gamma',         help='Gamma value for Focal Loss.', type=float, default=2)
     parser.add_argument('--fl-alpha',         help='Alpha value for Focal Loss.', type=float, default=0.25)
+    parser.add_argument('--previous-epoch',   help='The last epoch that was fully completed on previous training', type=int, default=0)
 
     # Fit generator arguments
     parser.add_argument('--workers', help='Number of multiprocessing workers. To disable multiprocessing, set workers to 0', type=int, default=1)

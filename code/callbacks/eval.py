@@ -106,13 +106,20 @@ class Evaluate(keras.callbacks.Callback):
             self.tensorboard.writer.add_summary(summary, epoch)
             run.log('mIoU', self.mIoU)
             
-            self.EAD_Score = 0.8*self.mean_ap + 0.2*self.mIoU
+            self.EAD_Score_old = 0.8*self.mean_ap + 0.2*self.mIoU
+            summary_value = summary.value.add()
+            summary_value.simple_value = self.EAD_Score_old
+            summary_value.tag = "EAD Score (old)"
+            self.tensorboard.writer.add_summary(summary, epoch)    
+            run.log('EAD_Score_old', self.EAD_Score_old)
+            
+            self.EAD_Score = 0.6*self.mean_ap + 0.4*self.mIoU
             summary_value = summary.value.add()
             summary_value.simple_value = self.EAD_Score
             summary_value.tag = "EAD Score"
             self.tensorboard.writer.add_summary(summary, epoch)    
             run.log('EAD_Score', self.EAD_Score)
-
+            
             self.AP1 = precisions[0]
             total_instances.append(num_annotations)
             summary_value = summary.value.add()
@@ -165,6 +172,7 @@ class Evaluate(keras.callbacks.Callback):
             
         logs['mAP'] = self.mean_ap
         logs["mIoU"] = self.mIoU
+        logs["EAD_Score_old"] = self.EAD_Score_old
         logs["EAD_Score"] = self.EAD_Score
         logs["specularity mAP"] = self.AP1
         logs["saturation mAP"] = self.AP2
@@ -181,4 +189,5 @@ class Evaluate(keras.callbacks.Callback):
             #print("Gamma, alpha: ", )
             print('mAP: {:.4f}'.format(self.mean_ap))
             print('mIoU: {:.4f}'.format(self.mIoU))
+            print('EAD Score (old): {:.4f}'.format(self.EAD_Score_old))
             print('EAD Score: {:.4f}'.format(self.EAD_Score))
