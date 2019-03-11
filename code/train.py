@@ -12,6 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+
 import argparse
 import os
 import sys
@@ -156,7 +157,7 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
             log_dir                = args.tensorboard_dir,
             histogram_freq         = 0,
             batch_size             = args.batch_size,
-            write_graph            = True,
+            write_graph            = False,
             write_grads            = False,
             write_images           = False,
             embeddings_freq        = 0,
@@ -173,15 +174,17 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
             # use prediction model for evaluation
             evaluation = CocoEval(validation_generator, tensorboard=tensorboard_callback)
         else:
-            evaluation = Evaluate(validation_generator, tensorboard=tensorboard_callback, weighted_average=args.weighted_average)
+            evaluation = Evaluate(validation_generator, score_threshold=args.score_threshold, tensorboard=tensorboard_callback, weighted_average=args.weighted_average)
         evaluation = RedirectModel(evaluation, prediction_model)
         callbacks.append(evaluation)
+        
 
     # save the model
     if args.snapshots:
         # ensure directory created first; otherwise h5py will error after epoch.
         makedirs(os.path.join(args.data_dir, args.snapshot_path))
         ## keras.callbacks.ModelCheckpoint: save model after every epoch
+          
         if args.val_annotations:
             checkpoint = keras.callbacks.ModelCheckpoint(
                 os.path.join(
@@ -238,21 +241,21 @@ def create_generators(args, preprocess_image):
     }
 
     # create random transform generator for augmenting training data
-    # if args.random_transform:
-    transform_generator = random_transform_generator(
-        min_rotation=-0.1,
-        max_rotation=0.1,
-        min_translation=(-0.1, -0.1),
-        max_translation=(0.1, 0.1),
-        min_shear=-0.1,
-        max_shear=0.1,
-        min_scaling=(0.9, 0.9),
-        max_scaling=(1.1, 1.1),
-        flip_x_chance=0.5,
-        flip_y_chance=0.5,
-    )
-    # else:
-        # transform_generator = random_transform_generator(flip_x_chance=0.5)
+    if args.random_transform:
+      transform_generator = random_transform_generator(
+          min_rotation=-0.1,
+          max_rotation=0.1,
+          min_translation=(-0.1, -0.1),
+          max_translation=(0.1, 0.1),
+          min_shear=-0.1,
+          max_shear=0.1,
+          min_scaling=(0.9, 0.9),
+          max_scaling=(1.1, 1.1),
+          flip_x_chance=0.5,
+          flip_y_chance=0.5,
+      )
+    else:
+      transform_generator = random_transform_generator(flip_x_chance=0.5)
 
     if dataset_type == 'coco':
         # import here to prevent unnecessary dependency on cocoapi
@@ -397,7 +400,7 @@ def parse_args(args):
     parser.add_argument('--no-snapshots',     help='Disable saving snapshots.', dest='snapshots', action='store_false')
     parser.add_argument('--no-evaluation',    help='Disable per epoch evaluation.', dest='evaluation', action='store_false')
     parser.add_argument('--freeze-backbone',  help='Freeze training of backbone layers.', action='store_true')
-    # parser.add_argument('--random-transform', help='Randomly transform image and annotations.', action='store_true')
+    parser.add_argument('--random-transform', help='Randomly transform image and annotations.', action='store_true')
     parser.add_argument('--image-min-side',   help='Rescale the image so the smallest side is min_side.', type=int, default=800)
     parser.add_argument('--image-max-side',   help='Rescale the image if the largest side is larger than max_side.', type=int, default=1333)
     parser.add_argument('--config',           help='Path to a configuration parameters .ini file.')
@@ -405,7 +408,9 @@ def parse_args(args):
     ## added these maself
     parser.add_argument('--fl-gamma',         help='Gamma value for Focal Loss.', type=float, default=2)
     parser.add_argument('--fl-alpha',         help='Alpha value for Focal Loss.', type=float, default=0.25)
-    parser.add_argument('--previous-epoch',   help='The last epoch that was fully completed on previous training', type=int, default=0)
+    # parser.add_argument('--aml',  help='Log with AML services', action='store_false')
+    parser.add_argument('--previous-epoch',    help='The last epoch that was fully completed on previous training', type=int, default=0)
+    parser.add_argument('--score-threshold',  help='Threshold on score to filter detections with (defaults to 0.4).', default=0.4, type=float)
 
     # Fit generator arguments
     parser.add_argument('--workers', help='Number of multiprocessing workers. To disable multiprocessing, set workers to 0', type=int, default=1)
@@ -419,13 +424,6 @@ def main(args=None):
     if args is None:
         args = sys.argv[1:]
     args = parse_args(args)
-
-    # Log configs
-    run.log('batch-size', args.batch_size)
-    run.log('gamma', args.fl_gamma)
-    run.log('alpha', args.fl_alpha)
-    run.log('lr', args.lr)
-    print('[INFO] - Batch Size: ' ,args.batch_size)
 
     # create object that stores backbone information
     backbone = models.backbone(args.backbone)
@@ -486,6 +484,8 @@ def main(args=None):
             validation_generator.compute_shapes = train_generator.compute_shapes
 
     # create the callbacks
+    
+    
     callbacks = create_callbacks(
         model,
         training_model,
@@ -511,6 +511,12 @@ def main(args=None):
         use_multiprocessing=use_multiprocessing,
         max_queue_size=args.max_queue_size
     )
+
+    # Log configs
+    run.log('batch-size', args.batch_size)
+    run.log('gamma', args.fl_gamma)
+    run.log('alpha', args.fl_alpha)
+    run.log('lr', args.lr)
 
 
 if __name__ == '__main__':
