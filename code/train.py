@@ -462,6 +462,9 @@ def main(args=None):
     run.log('gamma', args.fl_gamma)
     run.log('alpha', args.fl_alpha)
     run.log('lr', args.lr)
+    run.log('neg-overlap', args.neg_overlap)
+    run.log('pos-overlap', args.pos_overlap)
+    run.log('fpn-layers', args.fpn_layers)
 
 
 if __name__ == '__main__':
