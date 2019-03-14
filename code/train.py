@@ -232,6 +232,11 @@ def create_generators(args, preprocess_image):
         args             : parseargs object containing configuration for generators.
         preprocess_image : Function that preprocesses an image for the network.
     """
+    if args.fpn_layers == 5:
+      fpn_layers = [3, 4, 5, 6, 7]
+    elif args.fpn_layers == 4:
+      fpn_layers = [4, 5, 6, 7]
+
     common_args = {
         'batch_size'       : args.batch_size,
         'config'           : args.config,
@@ -240,7 +245,7 @@ def create_generators(args, preprocess_image):
         'preprocess_image' : preprocess_image,
         'negative_overlap' : args.neg_overlap,
         'positive_overlap' : args.pos_overlap,
-        'fpn_layers'       : args.fpn_layers,
+        'fpn_layers'       : fpn_layers,
     }
 
     # create random transform generator for augmenting training data
