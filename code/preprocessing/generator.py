@@ -25,6 +25,7 @@ from utils.anchors import (
     anchors_for_shape,
     guess_shapes
 )
+
 from utils.config import parse_anchor_parameters
 from utils.image import (
     TransformParameters,
@@ -48,6 +49,9 @@ class Generator(keras.utils.Sequence):
         shuffle_groups=True,
         image_min_side=800,
         image_max_side=1333,
+        negative_overlap = 0.4,
+        positive_overlap = 0.5,
+        fpn_layers = [3, 4, 5, 6, 7],
         transform_parameters=None,
         compute_anchor_targets=anchor_targets_bbox,
         compute_shapes=guess_shapes,
@@ -74,11 +78,14 @@ class Generator(keras.utils.Sequence):
         self.shuffle_groups         = shuffle_groups
         self.image_min_side         = image_min_side
         self.image_max_side         = image_max_side
+        self.negative_overlap       = negative_overlap
+        self.positive_overlap       = positive_overlap
+        self.fpn_layers             = fpn_layers
         self.transform_parameters   = transform_parameters or TransformParameters()
         self.compute_anchor_targets = compute_anchor_targets
         self.compute_shapes         = compute_shapes
         self.preprocess_image       = preprocess_image
-        self.config                 = config
+        self.config                 = config      
 
         # Define groups
         self.group_images()
@@ -277,7 +284,7 @@ class Generator(keras.utils.Sequence):
         anchor_params = None
         if self.config and 'anchor_parameters' in self.config:
             anchor_params = parse_anchor_parameters(self.config)
-        return anchors_for_shape(image_shape, anchor_params=anchor_params, shapes_callback=self.compute_shapes)
+        return anchors_for_shape(image_shape, pyramid_levels=self.fpn_layers, anchor_params=anchor_params, shapes_callback=self.compute_shapes)
 
     def compute_targets(self, image_group, annotations_group):
         """ Compute target outputs for the network using images and their annotations.
@@ -290,7 +297,9 @@ class Generator(keras.utils.Sequence):
             anchors,
             image_group,
             annotations_group,
-            self.num_classes()
+            self.num_classes(),
+            self.negative_overlap,
+            self.positive_overlap
         )
 
         return list(batches)

@@ -219,10 +219,10 @@ def anchors_for_shape(
     Returns
         np.array of shape (N, 4) containing the (x1, y1, x2, y2) coordinates for the anchors.
     """
-
+    
     if pyramid_levels is None:
         pyramid_levels = [3, 4, 5, 6, 7]
-
+    
     if anchor_params is None:
         anchor_params = AnchorParameters.default
 

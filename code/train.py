@@ -238,6 +238,9 @@ def create_generators(args, preprocess_image):
         'image_min_side'   : args.image_min_side,
         'image_max_side'   : args.image_max_side,
         'preprocess_image' : preprocess_image,
+        'negative_overlap' : args.neg_overlap,
+        'positive_overlap' : args.pos_overlap,
+        'fpn_layers'       : args.fpn_layers,
     }
 
     # create random transform generator for augmenting training data
@@ -257,36 +260,7 @@ def create_generators(args, preprocess_image):
     else:
       transform_generator = random_transform_generator(flip_x_chance=0.5)
 
-    if dataset_type == 'coco':
-        # import here to prevent unnecessary dependency on cocoapi
-        from preprocessing.coco import CocoGenerator
-
-        train_generator = CocoGenerator(
-            args.coco_path,
-            'train2017',
-            transform_generator=transform_generator,
-            **common_args
-        )
-
-        validation_generator = CocoGenerator(
-            args.coco_path,
-            'val2017',
-            **common_args
-        )
-    elif dataset_type == 'pascal':
-        train_generator = PascalVocGenerator(
-            args.pascal_path,
-            'trainval',
-            transform_generator=transform_generator,
-            **common_args
-        )
-
-        validation_generator = PascalVocGenerator(
-            args.pascal_path,
-            'test',
-            **common_args
-        )
-    elif dataset_type == 'csv':
+    if dataset_type == 'csv':
         train_generator = CSVGenerator(
             os.path.join(args.data_dir, args.annotations),
             os.path.join(args.data_dir, args.classes),
@@ -304,40 +278,7 @@ def create_generators(args, preprocess_image):
             )
         else:
             validation_generator = None
-    elif dataset_type == 'oid':
-        train_generator = OpenImagesGenerator(
-            args.main_dir,
-            subset='train',
-            version=args.version,
-            labels_filter=args.labels_filter,
-            annotation_cache_dir=args.annotation_cache_dir,
-            parent_label=args.parent_label,
-            transform_generator=transform_generator,
-            **common_args
-        )
 
-        validation_generator = OpenImagesGenerator(
-            args.main_dir,
-            subset='validation',
-            version=args.version,
-            labels_filter=args.labels_filter,
-            annotation_cache_dir=args.annotation_cache_dir,
-            parent_label=args.parent_label,
-            **common_args
-        )
-    elif dataset_type == 'kitti':
-        train_generator = KittiGenerator(
-            args.kitti_path,
-            subset='train',
-            transform_generator=transform_generator,
-            **common_args
-        )
-
-        validation_generator = KittiGenerator(
-            args.kitti_path,
-            subset='val',
-            **common_args
-        )
     else:
         raise ValueError('Invalid data type received: {}'.format(dataset_type))
 
@@ -411,7 +352,11 @@ def parse_args(args):
     # parser.add_argument('--aml',  help='Log with AML services', action='store_false')
     parser.add_argument('--previous-epoch',    help='The last epoch that was fully completed on previous training', type=int, default=0)
     parser.add_argument('--score-threshold',  help='Threshold on score to filter detections with (defaults to 0.4).', default=0.4, type=float)
-
+ 
+    parser.add_argument('--neg-overlap',  help='Upper IoU Threshold for considering bbox as FP in training.', default=0.4, type=float)
+    parser.add_argument('--pos-overlap',  help='Lower IoU Threshold for considering bbox as TP in training..', default=0.5, type=float)
+    parser.add_argument('--fpn-layers',   help='Number of FPN Layers to use. Either 4 or 5.', default=5, type=int)
+    
     # Fit generator arguments
     parser.add_argument('--workers', help='Number of multiprocessing workers. To disable multiprocessing, set workers to 0', type=int, default=1)
     parser.add_argument('--max-queue-size', help='Queue length for multiprocessing workers in fit generator.', type=int, default=10)
