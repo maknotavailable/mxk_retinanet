@@ -392,7 +392,16 @@ def main(args=None):
 
     # create the generators
     train_generator, validation_generator = create_generators(args, backbone.preprocess_image)
-
+    
+    # Log configs
+    run.log('batch-size', args.batch_size)
+    run.log('gamma', args.fl_gamma)
+    run.log('alpha', args.fl_alpha)
+    run.log('lr', args.lr)
+    run.log('neg-overlap', args.neg_overlap)
+    run.log('pos-overlap', args.pos_overlap)
+    run.log('fpn-layers', args.fpn_layers)
+    
     # create the model
     if args.snapshot is not None:
         print('Loading model, this may take a second...')
@@ -434,8 +443,6 @@ def main(args=None):
             validation_generator.compute_shapes = train_generator.compute_shapes
 
     # create the callbacks
-    
-    
     callbacks = create_callbacks(
         model,
         training_model,
@@ -461,15 +468,6 @@ def main(args=None):
         use_multiprocessing=use_multiprocessing,
         max_queue_size=args.max_queue_size
     )
-
-    # Log configs
-    run.log('batch-size', args.batch_size)
-    run.log('gamma', args.fl_gamma)
-    run.log('alpha', args.fl_alpha)
-    run.log('lr', args.lr)
-    run.log('neg-overlap', args.neg_overlap)
-    run.log('pos-overlap', args.pos_overlap)
-    run.log('fpn-layers', args.fpn_layers)
 
 
 if __name__ == '__main__':
