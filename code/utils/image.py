@@ -19,6 +19,9 @@ import numpy as np
 import cv2
 from PIL import Image
 
+from random import randint
+from imgaug import augmenters as iaa
+
 from .transform import change_transform_origin
 
 
@@ -149,6 +152,15 @@ def apply_transform(matrix, image, params):
         borderMode  = params.cvBorderMode(),
         borderValue = params.cval,
     )
+
+    ## in 1/9 of cases, color will be changed
+    ## between 50 to 100 will be added to channels 0 to 2 (BGR)
+    if randint(0, 8) == 1:
+      seq = iaa.Sequential([
+        iaa.WithChannels(randint(0, 2), iaa.Add((50, 200)))
+      ])
+      output = seq.augment_image(output)
+
     return output
 
 
