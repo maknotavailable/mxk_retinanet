@@ -236,6 +236,8 @@ def create_generators(args, preprocess_image):
       fpn_layers = [3, 4, 5, 6, 7]
     elif args.fpn_layers == 4:
       fpn_layers = [4, 5, 6, 7]
+    elif args.fpn_layers == 3:
+      fpn_layers = [5, 6, 7]
 
     common_args = {
         'batch_size'       : args.batch_size,
@@ -262,6 +264,19 @@ def create_generators(args, preprocess_image):
           flip_x_chance=0.5,
           flip_y_chance=0.5,
       )
+    #elif args.random_transform == "augm_a":
+    #  transform_generator = random_transform_generator(
+    #      min_rotation=-0.5,
+    #      max_rotation=0.5,
+    #      min_translation=(-0.3, -0.3),
+    #      max_translation=(0.3, 0.3),
+    #      min_shear=-0.3,
+    #      max_shear=0.3,
+    #      min_scaling=(0.6, 0.6),
+    #      max_scaling=(1.4, 1.4),
+    #      flip_x_chance=0.5,
+    #      flip_y_chance=0.5,
+    #  )
     else:
       transform_generator = random_transform_generator(flip_x_chance=0.5)
 

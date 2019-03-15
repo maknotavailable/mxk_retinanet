@@ -152,6 +152,13 @@ def apply_transform(matrix, image, params):
         borderMode  = params.cvBorderMode(),
         borderValue = params.cval,
     )
+    
+    ## in 1/9 cases gaussian noise will be added to the image
+    #if randint(0, 8) == 1:
+    #  seq = iaa.Sequential([
+    #    iaa.AdditiveGaussianNoise(scale=0.5*255)
+    #  ])
+    #  output = seq.augment_image(output)
 
     ## in 1/9 of cases, color will be changed
     ## between 50 to 100 will be added to channels 0 to 2 (BGR)
