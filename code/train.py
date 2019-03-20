@@ -378,6 +378,7 @@ def parse_args(args):
     parser.add_argument('--pos-overlap',  help='Lower IoU Threshold for considering bbox as TP in training..', default=0.5, type=float)
     parser.add_argument('--fpn-layers',   help='Number of FPN Layers to use. Either 4 or 5.', default=5, type=int)
     parser.add_argument('--augm',         help='Which augmentation to use', default=0, type=int)
+    parser.add_argument('--im-count',   help='How many images are in the train set.', default=1800, type=int)
 
     # Fit generator arguments
     parser.add_argument('--workers', help='Number of multiprocessing workers. To disable multiprocessing, set workers to 0', type=int, default=1)
@@ -477,7 +478,7 @@ def main(args=None):
     # start training
     training_model.fit_generator(
         generator=train_generator,
-        steps_per_epoch=int(1800/args.batch_size),
+        steps_per_epoch=int(im_count/args.batch_size),
         epochs=args.epochs,
         verbose=1,
         callbacks=callbacks,
