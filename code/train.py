@@ -248,6 +248,7 @@ def create_generators(args, preprocess_image):
         'negative_overlap' : args.neg_overlap,
         'positive_overlap' : args.pos_overlap,
         'fpn_layers'       : fpn_layers,
+        'augm'             : args.augm,
     }
 
     # create random transform generator for augmenting training data
@@ -376,7 +377,8 @@ def parse_args(args):
     parser.add_argument('--neg-overlap',  help='Upper IoU Threshold for considering bbox as FP in training.', default=0.4, type=float)
     parser.add_argument('--pos-overlap',  help='Lower IoU Threshold for considering bbox as TP in training..', default=0.5, type=float)
     parser.add_argument('--fpn-layers',   help='Number of FPN Layers to use. Either 4 or 5.', default=5, type=int)
-    
+    parser.add_argument('--augm',         help='Which augmentation to use', default=0, type=int)
+
     # Fit generator arguments
     parser.add_argument('--workers', help='Number of multiprocessing workers. To disable multiprocessing, set workers to 0', type=int, default=1)
     parser.add_argument('--max-queue-size', help='Queue length for multiprocessing workers in fit generator.', type=int, default=10)

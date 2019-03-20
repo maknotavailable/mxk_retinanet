@@ -52,6 +52,7 @@ class Generator(keras.utils.Sequence):
         negative_overlap = 0.4,
         positive_overlap = 0.5,
         fpn_layers = [3, 4, 5, 6, 7],
+        augm = 0,
         transform_parameters=None,
         compute_anchor_targets=anchor_targets_bbox,
         compute_shapes=guess_shapes,
@@ -81,11 +82,12 @@ class Generator(keras.utils.Sequence):
         self.negative_overlap       = negative_overlap
         self.positive_overlap       = positive_overlap
         self.fpn_layers             = fpn_layers
+        self.augm                   = augm
         self.transform_parameters   = transform_parameters or TransformParameters()
         self.compute_anchor_targets = compute_anchor_targets
         self.compute_shapes         = compute_shapes
         self.preprocess_image       = preprocess_image
-        self.config                 = config      
+        self.config                 = config
 
         # Define groups
         self.group_images()
@@ -195,7 +197,7 @@ class Generator(keras.utils.Sequence):
                 transform = adjust_transform_for_image(next(self.transform_generator), image, self.transform_parameters.relative_translation)
 
             # apply transformation to image
-            image = apply_transform(transform, image, self.transform_parameters)
+            image = apply_transform(self.augm, transform, image, self.transform_parameters)
 
             # Transform the bounding boxes in the annotations.
             annotations['bboxes'] = annotations['bboxes'].copy()

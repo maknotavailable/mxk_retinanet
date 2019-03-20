@@ -130,7 +130,7 @@ class TransformParameters:
             return cv2.INTER_LANCZOS4
 
 
-def apply_transform(matrix, image, params):
+def apply_transform(augm, matrix, image, params):
     """
     Apply a transformation to an image.
 
@@ -152,21 +152,22 @@ def apply_transform(matrix, image, params):
         borderMode  = params.cvBorderMode(),
         borderValue = params.cval,
     )
-    
-    ## in 1/9 cases gaussian noise will be added to the image
-    #if randint(0, 8) == 1:
-    #  seq = iaa.Sequential([
-    #    iaa.AdditiveGaussianNoise(scale=0.5*255)
-    #  ])
-    #  output = seq.augment_image(output)
+    if augm == 1:
+        # in 1/9 cases gaussian noise will be added to the image
+        if randint(0, 8) == 1:
+        seq = iaa.Sequential([
+            iaa.AdditiveGaussianNoise(scale=0.5*255)
+        ])
+        output = seq.augment_image(output)
 
-    ## in 1/9 of cases, color will be changed
-    ## between 50 to 100 will be added to channels 0 to 2 (BGR)
-    #if randint(0, 8) == 1:
-    #  seq = iaa.Sequential([
-    #    iaa.WithChannels(randint(0, 2), iaa.Add((50, 200)))
-    #  ])
-    #  output = seq.augment_image(output)
+    if augm == 2:
+        # in 1/9 of cases, color will be changed
+        # between 50 to 100 will be added to channels 0 to 2 (BGR)
+        if randint(0, 8) == 1:
+        seq = iaa.Sequential([
+            iaa.WithChannels(randint(0, 2), iaa.Add((50, 200)))
+        ])
+        output = seq.augment_image(output)
 
     return output
 
