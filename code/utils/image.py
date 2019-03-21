@@ -19,8 +19,8 @@ import numpy as np
 import cv2
 from PIL import Image
 
-#from random import randint
-#from imgaug import augmenters as iaa
+from random import randint
+from imgaug import augmenters as iaa
 
 from .transform import change_transform_origin
 

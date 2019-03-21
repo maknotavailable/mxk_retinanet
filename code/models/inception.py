@@ -70,4 +70,4 @@ def inc_retinanet(num_classes, backbone='inc', inputs=None, modifier=None, **kwa
         inc = modifier(inc)
 
     # create the full model
-    return retinanet.retinanet(inputs=inputs, num_classes=num_classes, **kwargs)
+    return retinanet.retinanet(inputs=inputs, num_classes=num_classes, backbone_layers=inc.outputs[1:], **kwargs)
