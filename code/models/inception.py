@@ -31,7 +31,14 @@ class InceptionBackbone(Backbone):
         """ Returns a retinanet model using the correct backbone.
         """
         return inc_retinanet(*args, backbone=self.backbone, **kwargs)
+    
+    def validate(self):
+        """ Checks whether the backbone string is correct.
+        """
+        allowed_backbones = ['inc']
 
+        if self.backbone not in allowed_backbones:
+            raise ValueError('Backbone (\'{}\') not in allowed backbones ({}).'.format(self.backbone, allowed_backbones))
 
     def preprocess_image(self, inputs):
         """ Takes as input an image and prepares it for being passed through the network.
