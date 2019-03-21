@@ -57,6 +57,8 @@ def backbone(backbone_name):
         from .vgg import VGGBackbone as b
     elif 'densenet' in backbone_name:
         from .densenet import DenseNetBackbone as b
+    elif 'inc' in backbone_name:
+        from .inception import InceptionBackbone as b
     else:
         raise NotImplementedError('Backbone class for  \'{}\' not implemented.'.format(backbone))
 

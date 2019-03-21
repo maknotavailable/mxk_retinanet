@@ -478,7 +478,7 @@ def main(args=None):
     # start training
     training_model.fit_generator(
         generator=train_generator,
-        steps_per_epoch=int(im_count/args.batch_size),
+        steps_per_epoch=int(args.im_count/args.batch_size),
         epochs=args.epochs,
         verbose=1,
         callbacks=callbacks,
