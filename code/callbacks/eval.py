@@ -64,7 +64,7 @@ class Evaluate(keras.callbacks.Callback):
         logs = logs or {}
 
         # run evaluation
-        false_positives_dict, true_positives_dict, average_precisions, iou, image_names, detection_list, scores_list, labels_list = evaluate(
+        false_positives_dict, true_positives_dict, iou_dict, average_precisions, iou, image_names, detection_list, scores_list, labels_list = evaluate(
             self.generator,
             self.model,
             iou_threshold=self.iou_threshold,
@@ -76,12 +76,15 @@ class Evaluate(keras.callbacks.Callback):
         # compute per class average precision
         total_instances = []
         precisions = []
+        ious = []
         for label, (average_precision, num_annotations ) in average_precisions.items():
             if self.verbose == 1:
                 print('{:.0f} instances of class'.format(num_annotations),
-                      self.generator.label_to_name(label), 'with average precision: {:.4f}'.format(average_precision))
+                      self.generator.label_to_name(label), 'with average precision: {:.4f}'.format(average_precision)
+                      , 'and average IoU: {:.2f}'.format(iou_dict[label][0]))
             total_instances.append(num_annotations)
             precisions.append(average_precision)
+            ious.append(iou_dict[label][0])
         if self.weighted_average:
             self.mean_ap = sum([a * b for a, b in zip(total_instances, precisions)]) / sum(total_instances)
         else:
@@ -128,12 +131,26 @@ class Evaluate(keras.callbacks.Callback):
             self.tensorboard.writer.add_summary(summary, epoch)
             run.log('specularity mAP', self.AP1)
             
+            self.IOU1 = ious[0]
+            summary_value = summary.value.add()
+            summary_value.simple_value = self.IOU1
+            summary_value.tag = "specularity IOU"
+            self.tensorboard.writer.add_summary(summary, epoch)
+            run.log('specularity IOU', self.IOU1)
+            
             self.AP2 = precisions[1]
             summary_value = summary.value.add()
             summary_value.simple_value = self.AP2
             summary_value.tag = "saturation mAP"
             self.tensorboard.writer.add_summary(summary, epoch)
             run.log('saturation mAP', self.AP2)
+
+            self.IOU2 = ious[1]
+            summary_value = summary.value.add()
+            summary_value.simple_value = self.IOU2
+            summary_value.tag = "saturation IOU"
+            self.tensorboard.writer.add_summary(summary, epoch)
+            run.log('saturation IOU', self.IOU2)
             
             self.AP3 = precisions[2]
             summary_value = summary.value.add()
@@ -142,12 +159,26 @@ class Evaluate(keras.callbacks.Callback):
             self.tensorboard.writer.add_summary(summary, epoch)
             run.log('artifact mAP', self.AP3)
             
+            self.IOU3 = ious[2]
+            summary_value = summary.value.add()
+            summary_value.simple_value = self.IOU3
+            summary_value.tag = "artifact IOU"
+            self.tensorboard.writer.add_summary(summary, epoch)
+            run.log('artifact IOU', self.IOU3)   
+
             self.AP4 = precisions[3]
             summary_value = summary.value.add()
             summary_value.simple_value = self.AP4
             summary_value.tag = "blur mAP"
             self.tensorboard.writer.add_summary(summary, epoch)     
-            run.log('blur mAP', self.AP4)       
+            run.log('blur mAP', self.AP4)  
+
+            self.IOU4 = ious[3]
+            summary_value = summary.value.add()
+            summary_value.simple_value = self.IOU4
+            summary_value.tag = "blur IOU"
+            self.tensorboard.writer.add_summary(summary, epoch)
+            run.log('blur IOU', self.IOU4)                  
 
             self.AP5 = precisions[4]
             summary_value = summary.value.add()
@@ -156,12 +187,26 @@ class Evaluate(keras.callbacks.Callback):
             self.tensorboard.writer.add_summary(summary, epoch) 
             run.log('contrast mAP', self.AP5)
             
+            self.IOU5 = ious[4]
+            summary_value = summary.value.add()
+            summary_value.simple_value = self.IOU5
+            summary_value.tag = "contrast IOU"
+            self.tensorboard.writer.add_summary(summary, epoch)
+            run.log('contrast IOU', self.IOU5) 
+
             self.AP6 = precisions[5]
             summary_value = summary.value.add()
             summary_value.simple_value = self.AP6
             summary_value.tag = "bubbles mAP"
             self.tensorboard.writer.add_summary(summary, epoch) 
             run.log('bubbles mAP', self.AP6)
+
+            self.IOU6 = ious[5]
+            summary_value = summary.value.add()
+            summary_value.simple_value = self.IOU6
+            summary_value.tag = "bubbles IOU"
+            self.tensorboard.writer.add_summary(summary, epoch)
+            run.log('bubbles IOU', self.IOU6) 
             
             self.AP7 = precisions[6]
             summary_value = summary.value.add()
@@ -169,6 +214,13 @@ class Evaluate(keras.callbacks.Callback):
             summary_value.tag = "instrument mAP"
             self.tensorboard.writer.add_summary(summary, epoch) 
             run.log('instrument mAP', self.AP7)
+
+            self.IOU7 = ious[6]
+            summary_value = summary.value.add()
+            summary_value.simple_value = self.IOU7
+            summary_value.tag = "instrument IOU"
+            self.tensorboard.writer.add_summary(summary, epoch)
+            run.log('instrument IOU', self.IOU7) 
             
         logs['mAP'] = self.mean_ap
         logs["mIoU"] = self.mIoU
@@ -181,6 +233,13 @@ class Evaluate(keras.callbacks.Callback):
         logs["contrast mAP"] = self.AP5
         logs["bubbles mAP"] = self.AP6
         logs["instrument mAP"] = self.AP7
+        logs["specularity mAP"] = self.IOU1
+        logs["saturation mAP"] = self.IOU2
+        logs["artifact mAP"] = self.IOU3
+        logs["blur mAP"] = self.IOU4
+        logs["contrast mAP"] = self.IOU5
+        logs["bubbles mAP"] = self.IOU6
+        logs["instrument mAP"] = self.IOU7
         
         ##
         

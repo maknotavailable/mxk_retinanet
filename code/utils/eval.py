@@ -203,6 +203,7 @@ def evaluate(
     average_precisions = {}
     true_positives_dict = {}
     false_positives_dict = {}
+    iou_dict = {}
 
     # all_detections = pickle.load(open('all_detections.pkl', 'rb'))
     # all_annotations = pickle.load(open('all_annotations.pkl', 'rb'))
@@ -229,6 +230,7 @@ def evaluate(
         scores          = np.zeros((0,))
         num_annotations = 0.0
         num_detections = 0.0
+        iou_per_class = []
         
         for i in range(generator.size()):
             detections           = all_detections[i][label]
@@ -258,6 +260,7 @@ def evaluate(
                     true_positives  = np.append(true_positives, 1)
                     #print("bbox overlap: ",max_overlap)
                     iou.append(np.asscalar(max_overlap))
+                    iou_per_class.append(np.asscalar(max_overlap))
                     #print("iou list: ",iou)
                     detected_annotations.append(assigned_annotation)
                     #all_completed_detections.append(d)
@@ -270,6 +273,7 @@ def evaluate(
                     true_positives  = np.append(true_positives, 0)
                     ## the way (I think) they do it in EAD: if the overlap doesn't reach treshold, it's 0
                     iou.append(0)
+                    iou_per_class.append(0)
             #print("Scores: ",scores)
                     
         # no annotations -> AP for this class is 0 (is this correct?)
@@ -308,6 +312,7 @@ def evaluate(
             false_positives_dict[label] = max(false_positives), num_annotations
         else:
             false_positives_dict[label] = 0, num_annotations
+        iou_dict[label] = np.mean(iou), num_annotations
         #print("Label: ",generator.label_to_name(label))
         #print("FP: ",false_positives_dict)
         #print("TP: ",true_positives_dict)
@@ -316,4 +321,4 @@ def evaluate(
         #print("recall: ",recall)
         
 
-    return false_positives_dict, true_positives_dict, average_precisions, iou, image_names, detection_list, scores_list, labels_list
+    return false_positives_dict, true_positives_dict, iou_dict, average_precisions, iou, image_names, detection_list, scores_list, labels_list

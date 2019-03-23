@@ -47,27 +47,33 @@ class InceptionBackbone(Backbone):
 
 
 def inc_retinanet(num_classes, backbone='inc', inputs=None, modifier=None, **kwargs):
-    """ Constructs a retinanet model using a vgg backbone.
+    """ Constructs a retinanet model using a inception resnet v2 backbone.
 
     Args
         num_classes: Number of classes to predict.
-        backbone: Which backbone to use (one of ('vgg16', 'vgg19')).
+        backbone: Which backbone to use (always 'inc').
         inputs: The inputs to the network (defaults to a Tensor of shape (None, None, 3)).
         modifier: A function handler which can modify the backbone before using it in retinanet (this can be used to freeze backbone layers for example).
 
     Returns
-        RetinaNet model with a VGG backbone.
+        RetinaNet model with a Inception Resnet v2
+         backbone.
     """
     # choose default input
 
     if inputs is None:
-        inputs = keras.layers.Input(shape=(None, None, 3))
+        if keras.backend.image_data_format() == 'channels_first':
+            inputs = keras.layers.Input(shape=(3, None, None))
+        else:
+            inputs = keras.layers.Input(shape=(None, None, 3))
 
     # create the inc backbone
-    inc = keras.applications.inception_resnet_v2.InceptionResNetV2(input_tensor=inputs, include_top=False, weights=None)
+    inc = keras.applications.inception_resnet_v2.InceptionResNetV2(input_tensor=inputs, include_top=False)
 
     if modifier:
         inc = modifier(inc)
 
     # create the full model
-    return retinanet.retinanet(inputs=inputs, num_classes=num_classes, backbone_layers=inc.outputs[1:], **kwargs)
+    layer_names = ["mixed_5b", "block17_20_conv", "conv_7b"]
+    layer_outputs = [inc.get_layer(name).output for name in layer_names]
+    return retinanet.retinanet(inputs=inputs, num_classes=num_classes, backbone_layers=layer_outputs, **kwargs)
