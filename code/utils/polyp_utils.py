@@ -4,6 +4,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import cv2
 import pandas as pd
+import numpy as np
 
 
 def center_based_validation(per_im_df, mask_source):
