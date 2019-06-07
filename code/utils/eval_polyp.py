@@ -11,7 +11,7 @@ import cv2
 import progressbar
 assert(callable(progressbar.progressbar)), "Using wrong progressbar module, install 'progressbar2' instead."
 
-from utils.polyp_eval import run_validation
+from utils.polyp_utils import run_validation
 
 def _get_detections(generator, model, score_threshold=0.05, max_detections=100, save_path=None):
     """ Get the detections from the model using the generator.
