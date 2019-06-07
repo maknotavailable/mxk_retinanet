@@ -57,6 +57,7 @@ def default_classification_model(
     else:
         inputs  = keras.layers.Input(shape=(None, None, pyramid_feature_size))
     outputs = inputs
+    # Four 3x3 conv layers
     for i in range(4):
         outputs = keras.layers.Conv2D(
             filters=classification_feature_size,
