@@ -280,7 +280,6 @@ class Evaluate(keras.callbacks.Callback):
 
           self.precision   = precision(self.TP,self.FP)
           self.recall      = recall(self.TP,self.FN)
-          self.specificity = specificity(self.TN, self.FP, self.FN)
           self.f1          = f1(self.precision, self.recall)
           self.f2          = f2(self.precision, self.recall)
 
