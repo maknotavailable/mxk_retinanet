@@ -3,6 +3,7 @@ import time
 from PIL import Image
 import matplotlib.pyplot as plt
 import cv2
+import pandas as pd
 
 
 def center_based_validation(per_im_df, mask_source):
@@ -83,6 +84,36 @@ def run_validation(df, mask_dir):
     
   print('Time required for validation (in seconds): %.0f'%(time.time() - start))
   return TP_overall, FP_overall, TN_overall, FN_overall, tot_polyps
+
+def df_builder(scores_list, image_names, detection_list, labels_list):
+    
+  #start = time.time()
+  col_names =  ["image_path", "x1", "y1", "x2", "y2", "object_id", "score"]
+  detections_df = pd.DataFrame(columns = col_names)
+  
+  for i in range(len(scores_list)):
+
+    ## to change
+    image_path = image_names[i]
+    detections = detection_list[i]
+    scores = scores_list[i]
+    labels = labels_list[i]
+    
+    for j in range(len(scores)):
+      object_id = "polyp"
+
+      x1 = int(detections[j][0])
+      y1 = int(detections[j][1])
+      x2 = int(detections[j][2])
+      y2 = int(detections[j][3])
+
+      score = scores[j]
+
+      df_row = pd.DataFrame([[image_path, x1, y1, x2, y2, object_id, score]], columns = col_names)
+      detections_df = detections_df.append(df_row, ignore_index=True)
+  
+  #print('Duration for building df: %.0f'%(time.time() - start))  
+  return detections_df
 
 # metrics
 def precision(TP, FP):
