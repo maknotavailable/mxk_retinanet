@@ -102,7 +102,7 @@ def evaluate_polyp(
     save_path=None
 ):
     
-    all_detections, image_names, detection_list, scores_list, labels_list     = _get_detections(generator, model, score_threshold=score_threshold, max_detections=max_detections, save_path=save_path)
+    all_detections, image_names, detection_list, scores_list, labels_list = _get_detections(generator, model, score_threshold=score_threshold, max_detections=max_detections, save_path=save_path)
     # build df
     detections_df  = df_builder(scores_list, image_names, detection_list, labels_list)
     print("# of detections: ",detections_df.shape[0])

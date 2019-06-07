@@ -1,10 +1,31 @@
-# takes as input the dataframe with all the detections in submission-style (EAD) format
 import time
 from PIL import Image
 import matplotlib.pyplot as plt
 import cv2
 import pandas as pd
 import numpy as np
+
+def no_det_on_image(mask_source):
+  
+  # load the mask
+  mask = np.array(Image.open(mask_source), dtype=np.uint8)
+  
+  # get the individual components
+  gt_components  = cv2.connectedComponentsWithStats(mask, 8, cv2.CV_32S)
+  components_mat = gt_components[1].astype(np.uint8)
+  num_components = gt_components[0] - 1 
+
+  true_positives  = 0
+  false_positives = 0
+  false_negatives = num_components
+  
+  # TN
+  if num_components == 0:
+    true_negatives = 1
+  else:
+    true_negatives = 0
+  
+  return true_positives, false_positives, true_negatives, false_negatives, num_components
 
 
 def center_based_validation(per_im_df, mask_source):
@@ -54,14 +75,17 @@ def center_based_validation(per_im_df, mask_source):
   return true_positives, false_positives, true_negatives, false_negatives, num_components
 
 
-def run_validation(df, mask_dir):
+def run_validation(df, annot_csv, mask_dir):
   
   start = time.time()
   
   df["c_x"] = df["x1"] + ((df["x2"]-df["x1"])/2).astype(int)
   df["c_y"] = df["y1"] + ((df["y2"]-df["y1"])/2).astype(int)
   
-  image_list = list(df["image_path"].unique())
+  image_list  = list(df["image_path"].unique())
+  annot_df    = pd.read_csv(annot_csv, names=["image_path", "x1", "y1", "x2", "y2", "object_id"])
+  annot_list  = list(annot_df["image_path"].unique())
+  no_det_list = list(set(annot_list) - set(image_list))
 
   TP_overall = 0
   FP_overall = 0
@@ -77,6 +101,18 @@ def run_validation(df, mask_dir):
       mask_source = mask_source.replace("_masks/","_masks/p")
     TP_im, FP_im, TN_im, FN_im, num = center_based_validation(per_im_df, mask_source)
 
+    TP_overall += TP_im
+    FP_overall += FP_im
+    TN_overall += TN_im
+    FN_overall += FN_im
+    tot_polyps += num
+    
+  for img in no_det_list:
+    mask_source = img.replace(mask_dir.replace("_masks",""),mask_dir)
+    if "ETIS" in mask_dir:
+      mask_source = mask_source.replace("_masks/","_masks/p")
+    TP_im, FP_im, TN_im, FN_im, num = no_det_on_image(mask_source)
+    
     TP_overall += TP_im
     FP_overall += FP_im
     TN_overall += TN_im
