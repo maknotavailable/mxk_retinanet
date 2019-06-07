@@ -22,7 +22,7 @@ pyximport.install(setup_args={"script_args":['-L/usr/lib/x86_64-linux-gnu/'],
                               "include_dirs":np.get_include()}, 
                               language_level= 3)
 
-from compute_overlap import compute_overlap
+from utils.compute_overlap import compute_overlap
 
 class AnchorParameters:
     """ The parameteres that define how anchors are generated.
