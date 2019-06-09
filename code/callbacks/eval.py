@@ -32,6 +32,7 @@ class Evaluate(keras.callbacks.Callback):
         data_dir,
         train_dir,
         val_dir,
+        val_annotations,
         ## can these be changed via arguments?
         ## changed 
         iou_threshold=0.25,
@@ -59,6 +60,7 @@ class Evaluate(keras.callbacks.Callback):
         self.data_dir        = data_dir
         self.train_dir       = train_dir
         self.val_dir         = val_dir
+        self.val_annotations = val_annotations
         self.iou_threshold   = iou_threshold
         self.score_threshold = score_threshold
         self.max_detections  = max_detections
@@ -272,6 +274,7 @@ class Evaluate(keras.callbacks.Callback):
               self.model,
               self.data_dir,
               self.val_dir,
+              self.val_annotations,
               iou_threshold=self.iou_threshold,
               score_threshold=self.score_threshold,
               max_detections=self.max_detections,

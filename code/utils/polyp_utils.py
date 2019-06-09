@@ -5,15 +5,32 @@ import cv2
 import pandas as pd
 import numpy as np
 
+def get_components(mask):
+    
+    gt_components  = cv2.connectedComponentsWithStats(mask, 8, cv2.CV_32S)
+    components_mat = gt_components[1].astype(np.uint8)
+    num_components = gt_components[0] - 1 
+    
+    # check for noise if there is more than one polyp
+    if num_components > 1:
+        it_length = num_components
+        for i in range(it_length):
+            current_component = np.zeros(shape=components_mat.shape, dtype=np.uint8)
+            current_component[components_mat == i+1] = 255
+            pixel_count = np.count_nonzero(current_component == 255)
+            if pixel_count < 10:
+                num_components -= 1
+    
+    return num_components, components_mat
+  
+
 def no_det_on_image(mask_source):
   
   # load the mask
   mask = np.array(Image.open(mask_source), dtype=np.uint8)
   
   # get the individual components
-  gt_components  = cv2.connectedComponentsWithStats(mask, 8, cv2.CV_32S)
-  components_mat = gt_components[1].astype(np.uint8)
-  num_components = gt_components[0] - 1 
+  num_components, components_mat = get_components(mask)
 
   true_positives  = 0
   false_positives = 0
@@ -24,7 +41,7 @@ def no_det_on_image(mask_source):
     true_negatives = 1
   else:
     true_negatives = 0
-  
+
   return true_positives, false_positives, true_negatives, false_negatives, num_components
 
 
@@ -40,9 +57,7 @@ def center_based_validation(per_im_df, mask_source):
   num_detections = per_im_df.shape[0]
   
   # get the individual components
-  gt_components  = cv2.connectedComponentsWithStats(mask, 8, cv2.CV_32S)
-  components_mat = gt_components[1].astype(np.uint8)
-  num_components = gt_components[0] - 1 
+  num_components, components_mat = get_components(mask)
   
   # iterate through each box
   for box in range(num_detections):
@@ -71,7 +86,7 @@ def center_based_validation(per_im_df, mask_source):
     true_negatives = 1
   else:
     true_negatives = 0
-      
+
   return true_positives, false_positives, true_negatives, false_negatives, num_components
 
 
@@ -97,6 +112,8 @@ def run_validation(df, annot_csv, mask_dir):
     per_im_df   = df[df["image_path"] == img]
     
     mask_source = img.replace(mask_dir.replace("_masks",""),mask_dir)
+    if "612" in mask_dir:
+      mask_source = mask_source.replace(".bmp",".tif")
     if "ETIS" in mask_dir:
       mask_source = mask_source.replace("_masks/","_masks/p")
     TP_im, FP_im, TN_im, FN_im, num = center_based_validation(per_im_df, mask_source)
@@ -109,6 +126,8 @@ def run_validation(df, annot_csv, mask_dir):
     
   for img in no_det_list:
     mask_source = img.replace(mask_dir.replace("_masks",""),mask_dir)
+    if "612" in mask_dir:
+      mask_source = mask_source.replace(".bmp",".tif")
     if "ETIS" in mask_dir:
       mask_source = mask_source.replace("_masks/","_masks/p")
     TP_im, FP_im, TN_im, FN_im, num = no_det_on_image(mask_source)
