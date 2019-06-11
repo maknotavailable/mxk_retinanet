@@ -201,7 +201,7 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
             checkpoint = keras.callbacks.ModelCheckpoint(
                 os.path.join(
                     args.snapshot_path,
-                    '{backbone}_{dataset_type}_p{prev_epoch}_{{epoch:02d}}_{{loss:.2f}}.h5'.format(backbone=args.backbone, dataset_type=dataset_type, prev_epoch=args.previous_epoch)
+                    '{backbone}_{dataset_type}_p{prev_epoch}_{{epoch:02d}}.h5'.format(backbone=args.backbone, dataset_type=dataset_type, prev_epoch=args.previous_epoch)
                 ),
                 ## I'm adding these things to always save a model (and overwrite) if it improves the score
                 verbose=1,

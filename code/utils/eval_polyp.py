@@ -6,6 +6,7 @@ from utils.visualization import draw_detections, draw_annotations
 import keras
 import numpy as np
 import os
+import time
 
 import cv2
 import progressbar
@@ -29,10 +30,11 @@ def _get_detections_p(generator, model, score_threshold=0.05, max_detections=100
     all_detections = [[None for i in range(generator.num_classes()) if generator.has_label(i)] for j in range(generator.size())]
     
     ## added by me
-    image_names = []
+    image_names    = []
     detection_list = []
-    scores_list = []
-    labels_list = []
+    scores_list    = []
+    labels_list    = []
+    duration_list  = []
     
     for i in range(generator.size()): #progressbar.progressbar(, prefix='Running network: '):
         raw_image    = generator.load_image(i)
@@ -41,12 +43,15 @@ def _get_detections_p(generator, model, score_threshold=0.05, max_detections=100
         image_names.append(image_name)
         image        = generator.preprocess_image(raw_image.copy())
         image, scale = generator.resize_image(image)
-
+        
         if keras.backend.image_data_format() == 'channels_first':
             image = image.transpose((2, 0, 1))
 
         # run network
+        start    = time.time()
         boxes, scores, labels = model.predict_on_batch(np.expand_dims(image, axis=0))[:3]
+        duration = time.time() - start
+        duration_list.append(duration)
 
         # correct boxes for image scale
         boxes /= scale
@@ -70,7 +75,7 @@ def _get_detections_p(generator, model, score_threshold=0.05, max_detections=100
         image_labels     = labels[0, indices[scores_sort]]
         labels_list.append(image_labels)
         image_detections = np.concatenate([image_boxes, np.expand_dims(image_scores, axis=1), np.expand_dims(image_labels, axis=1)], axis=1)
-
+        
         if save_path is not None:
             ## both annotations and detections are drawn an "raw_image"
             draw_annotations(raw_image, generator.load_annotations(i), label_to_name=generator.label_to_name)
@@ -87,6 +92,8 @@ def _get_detections_p(generator, model, score_threshold=0.05, max_detections=100
 
     #print("scores_list: ",scores_list)
     #print("labels_list: ",labels_list)
+    avg_time = np.mean(duration_list)
+    print("avg time for inference per image: ",avg_time)
     return all_detections, image_names, detection_list, scores_list, labels_list
 
 

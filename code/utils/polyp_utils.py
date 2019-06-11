@@ -91,9 +91,7 @@ def center_based_validation(per_im_df, mask_source):
 
 
 def run_validation(df, annot_csv, mask_dir):
-  
-  start = time.time()
-  
+    
   df["c_x"] = df["x1"] + ((df["x2"]-df["x1"])/2).astype(int)
   df["c_y"] = df["y1"] + ((df["y2"]-df["y1"])/2).astype(int)
   
@@ -138,7 +136,6 @@ def run_validation(df, annot_csv, mask_dir):
     FN_overall += FN_im
     tot_polyps += num
     
-  print('Time required for validation (in seconds): %.0f'%(time.time() - start))
   return TP_overall, FP_overall, TN_overall, FN_overall, tot_polyps
 
 def df_builder(scores_list, image_names, detection_list, labels_list):
