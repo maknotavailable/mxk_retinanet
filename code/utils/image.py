@@ -161,7 +161,7 @@ def apply_transform(augm, matrix, image, params):
             output = seq.augment_image(output)
     
     if augm == 11:
-        # in 1/9 cases gaussian noise will be added to the image
+        # in 1/5 cases gaussian noise will be added to the image
         if randint(0, 4) == 1:
             seq = iaa.Sequential([
                 iaa.AdditiveGaussianNoise(scale=0.5*255)
@@ -178,7 +178,7 @@ def apply_transform(augm, matrix, image, params):
             output = seq.augment_image(output)
 
     if augm == 22:
-        # in 1/9 of cases, color will be changed
+        # in 1/5 of cases, color will be changed
         # between 50 to 100 will be added to channels 0 to 2 (BGR)
         if randint(0, 4) == 1:
             seq = iaa.Sequential([
