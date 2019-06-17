@@ -54,7 +54,7 @@ def center_based_validation(per_im_df, mask_source):
   true_positives  = 0
   false_positives = 0
   false_negatives = 0
-  num_detections = per_im_df.shape[0]
+  num_detections  = per_im_df.shape[0]
   
   # get the individual components
   num_components, components_mat = get_components(mask)
@@ -106,9 +106,12 @@ def run_validation(df, annot_csv, mask_dir):
   FN_overall = 0
   tot_polyps = 0
   
+  polyp_df = df[df["object_id"] == "polyp"]
+  
   for img in image_list:
-    per_im_df   = df[df["image_path"] == img]
-    
+    per_im_df   = polyp_df[polyp_df["image_path"] == img]
+    if "combined" in mask_dir:
+      mask_dir = mask_dir.replace("combined","polyps")
     mask_source = img.replace(mask_dir.replace("_masks",""),mask_dir)
     if "612" in mask_dir:
       mask_source = mask_source.replace(".bmp",".tif")

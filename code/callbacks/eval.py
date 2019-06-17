@@ -43,7 +43,8 @@ class Evaluate(keras.callbacks.Callback):
         tensorboard=None,
         weighted_average=False,
         verbose=1,
-        dataset_type='ead'
+        dataset_type='ead',
+        mode="scoring"
     ):
         """ Evaluate a given dataset using a given model at the end of every epoch during training.
         # Arguments
@@ -69,6 +70,7 @@ class Evaluate(keras.callbacks.Callback):
         self.weighted_average = weighted_average
         self.verbose         = verbose
         self.dataset_type    = dataset_type
+        self.mode            = mode
 
         super(Evaluate, self).__init__()
 
@@ -275,6 +277,7 @@ class Evaluate(keras.callbacks.Callback):
               self.data_dir,
               self.val_dir,
               self.val_annotations,
+              self.mode,
               iou_threshold=self.iou_threshold,
               score_threshold=self.score_threshold,
               max_detections=self.max_detections,
