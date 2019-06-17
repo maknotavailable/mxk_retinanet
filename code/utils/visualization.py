@@ -20,7 +20,7 @@ import numpy as np
 from utils.colors import label_color
 
 
-def draw_box(image, box, color, thickness=2):
+def draw_box(image, box, mode, color, thickness=2):
     """ Draws a box on an image with a given color.
 
     # Arguments
@@ -30,13 +30,20 @@ def draw_box(image, box, color, thickness=2):
         thickness : The thickness of the lines to draw a box with.
     """
     b = np.array(box).astype(int)
-    cv2.rectangle(image, (b[0], b[1]), (b[2], b[3]), color, thickness, cv2.LINE_AA)
     
-    x_mid = int(b[0] + (b[2] - b[0])/2)
-    y_mid = int(b[1] + (b[3] - b[1])/2)
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    cv2.putText(image, "x", (x_mid, y_mid) ,font, 0.8, color, 5, cv2.LINE_AA)
+    if mode == "scoring":
+      thickness = 2
+      cv2.rectangle(image, (b[0], b[1]), (b[2], b[3]), color, thickness, cv2.LINE_AA)
 
+      x_mid = int(b[0] + (b[2] - b[0])/2)
+      y_mid = int(b[1] + (b[3] - b[1])/2)
+      font = cv2.FONT_HERSHEY_SIMPLEX
+      cv2.putText(image, "x", (x_mid, y_mid) ,font, 0.8, color, 5, cv2.LINE_AA)
+      
+    elif mode == "detection":
+      thickness = 1
+      cv2.rectangle(image, (b[0], b[1]), (b[2], b[3]), color, thickness, cv2.LINE_AA)
+      
 def draw_caption(image, box, caption):
     """ Draws a caption above the box in an image.
 
@@ -63,7 +70,7 @@ def draw_boxes(image, boxes, color, thickness=2):
         draw_box(image, b, color, thickness=thickness)
 
 
-def draw_detections(image, boxes, scores, labels, color=None, label_to_name=None, im_threshold=0.3):
+def draw_detections(image, boxes, scores, labels, mode, color=None, label_to_name=None, im_threshold=0.3):
     """ Draws detections in an image.
 
     # Arguments
@@ -79,7 +86,7 @@ def draw_detections(image, boxes, scores, labels, color=None, label_to_name=None
     
     for i in selection:
         c = color if color is not None else label_color(labels[i])
-        draw_box(image, boxes[i, :], color=c)
+        draw_box(image, boxes[i, :], mode, color=c)
 
         # draw labels
         caption = (label_to_name(labels[i]) if label_to_name else labels[i]) + ': {0:.2f}'.format(scores[i])
@@ -88,7 +95,7 @@ def draw_detections(image, boxes, scores, labels, color=None, label_to_name=None
     return len(selection)
 
 
-def draw_annotations(image, annotations, color=(0, 255, 0), label_to_name=None):
+def draw_annotations(image, annotations, mode, color=(0, 255, 0), label_to_name=None):
     """ Draws annotations in an image.
 
     # Arguments
@@ -109,6 +116,6 @@ def draw_annotations(image, annotations, color=(0, 255, 0), label_to_name=None):
         c       = color if color is not None else label_color(label)
         caption = '{}'.format(label_to_name(label) if label_to_name else label)
         draw_caption(image, annotations['bboxes'][i], caption)
-        draw_box(image, annotations['bboxes'][i], color=c)
+        draw_box(image, annotations['bboxes'][i], mode, color=c)
         
     return annotations['bboxes'].shape[0]

@@ -138,7 +138,7 @@ def run_validation(df, annot_csv, mask_dir):
     
   return TP_overall, FP_overall, TN_overall, FN_overall, tot_polyps
 
-def df_builder(scores_list, image_names, detection_list, labels_list):
+def df_builder(scores_list, image_names, detection_list, labels_list, mode):
     
   #start = time.time()
   col_names =  ["image_path", "x1", "y1", "x2", "y2", "object_id", "score"]
@@ -152,18 +152,33 @@ def df_builder(scores_list, image_names, detection_list, labels_list):
     scores = scores_list[i]
     labels = labels_list[i]
     
-    for j in range(len(scores)):
-      object_id = "polyp"
+    if mode == "scoring":
+      for j in range(len(scores)):
+        object_id = "polyp"
+        x1 = int(detections[j][0])
+        y1 = int(detections[j][1])
+        x2 = int(detections[j][2])
+        y2 = int(detections[j][3])
 
-      x1 = int(detections[j][0])
-      y1 = int(detections[j][1])
-      x2 = int(detections[j][2])
-      y2 = int(detections[j][3])
+        score = scores[j]
 
-      score = scores[j]
+        df_row = pd.DataFrame([[image_path, x1, y1, x2, y2, object_id, score]], columns = col_names)
+        detections_df = detections_df.append(df_row, ignore_index=True)
+        
+    elif mode == "detection":
+      for j in range(len(scores)):
+        class_labels = ["specularity", "saturation", "artifact", "blur", "contrast", "bubbles", "instrument"]
+        object_id = class_labels[labels[j]]
+        x1 = int(detections[j][0])
+        y1 = int(detections[j][1])
+        x2 = int(detections[j][2])
+        y2 = int(detections[j][3])
 
-      df_row = pd.DataFrame([[image_path, x1, y1, x2, y2, object_id, score]], columns = col_names)
-      detections_df = detections_df.append(df_row, ignore_index=True)
+        score = scores[j]
+
+        df_row = pd.DataFrame([[image_path, x1, y1, x2, y2, object_id, score]], columns = col_names)
+        detections_df = detections_df.append(df_row, ignore_index=True)      
+
   
   #print('Duration for building df: %.0f'%(time.time() - start))  
   return detections_df
