@@ -126,6 +126,8 @@ def run_validation(df, annot_csv, mask_dir):
     tot_polyps += num
     
   for img in no_det_list:
+    if "combined" in mask_dir:
+      mask_dir = mask_dir.replace("combined","polyps")
     mask_source = img.replace(mask_dir.replace("_masks",""),mask_dir)
     if "612" in mask_dir:
       mask_source = mask_source.replace(".bmp",".tif")
