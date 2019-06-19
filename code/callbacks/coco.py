@@ -16,7 +16,7 @@ limitations under the License.
 
 import keras
 from utils.coco_eval import evaluate_coco
-from azureml.core import Run
+#from azureml.core import Run
 
 # start an Azure ML run
 run = Run.get_context()

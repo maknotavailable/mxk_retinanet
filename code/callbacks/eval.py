@@ -17,7 +17,7 @@ from utils.eval import evaluate
 from utils.eval_polyp import evaluate_polyp
 from utils.polyp_utils import recall, precision, f1, f2
 import numpy as np
-from azureml.core import Run
+#from azureml.core import Run
 
 # start an Azure ML run
 run = Run.get_context()
