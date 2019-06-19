@@ -16,12 +16,8 @@ limitations under the License.
 import keras
 import backend
 
-
-<<<<<<< HEAD
 def focal(c_weight=1, alpha=0.25, gamma=2.0):
-=======
-def focal(c_weight, alpha=0.25, gamma=2.0):
->>>>>>> 32195b477dfcec2312b6d42c935b01fb28e7b35d
+
     """ Create a functor for computing the focal loss.
 
     Args
@@ -70,11 +66,7 @@ def focal(c_weight, alpha=0.25, gamma=2.0):
     return _focal
 
 
-<<<<<<< HEAD
 def smooth_l1(r_weight=1, sigma=3.0):
-=======
-def smooth_l1(r_weight, sigma=3.0):
->>>>>>> 32195b477dfcec2312b6d42c935b01fb28e7b35d
     """ Create a smooth L1 loss functor.
 
     Args
