@@ -20,7 +20,7 @@ import numpy as np
 #from azureml.core import Run
 
 # start an Azure ML run
-run = Run.get_context()
+#run = Run.get_context()
 
 class Evaluate(keras.callbacks.Callback):
     """ Evaluation callback for arbitrary datasets.

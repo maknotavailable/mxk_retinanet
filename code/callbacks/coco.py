@@ -19,7 +19,7 @@ from utils.coco_eval import evaluate_coco
 #from azureml.core import Run
 
 # start an Azure ML run
-run = Run.get_context()
+#run = Run.get_context()
 
 class CocoEval(keras.callbacks.Callback):
     """ Performs COCO evaluation on each epoch.
