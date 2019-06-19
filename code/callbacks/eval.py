@@ -33,6 +33,7 @@ class Evaluate(keras.callbacks.Callback):
         train_dir,
         val_dir,
         val_annotations,
+        classes,
         ## can these be changed via arguments?
         ## changed 
         iou_threshold=0.25,
@@ -62,6 +63,7 @@ class Evaluate(keras.callbacks.Callback):
         self.train_dir       = train_dir
         self.val_dir         = val_dir
         self.val_annotations = val_annotations
+        self.classes         = classes
         self.iou_threshold   = iou_threshold
         self.score_threshold = score_threshold
         self.max_detections  = max_detections
@@ -271,6 +273,8 @@ class Evaluate(keras.callbacks.Callback):
             
         elif self.dataset_type == 'polyp':
           
+          self.classes_pure = os.path.join(self.data_dir, self.classes)
+          
           self.TP, self.FP, self.TN, self.FN, p_count = evaluate_polyp(
               self.generator,
               self.model,
@@ -278,6 +282,7 @@ class Evaluate(keras.callbacks.Callback):
               self.val_dir,
               self.val_annotations,
               self.mode,
+              self.classes_pure,
               iou_threshold=self.iou_threshold,
               score_threshold=self.score_threshold,
               max_detections=self.max_detections,
