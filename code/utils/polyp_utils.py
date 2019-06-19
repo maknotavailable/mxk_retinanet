@@ -143,7 +143,10 @@ def run_validation(df, annot_csv, mask_dir):
     
   return TP_overall, FP_overall, TN_overall, FN_overall, tot_polyps
 
-def df_builder(scores_list, image_names, detection_list, labels_list, mode):
+def df_builder(scores_list, image_names, detection_list, labels_list, mode, classes):
+  
+  class_file = pd.read_csv(classes, names=["class_name","label"])
+  class_list  = list(class_file.class_name)
     
   #start = time.time()
   col_names =  ["image_path", "x1", "y1", "x2", "y2", "object_id", "score"]
@@ -159,7 +162,7 @@ def df_builder(scores_list, image_names, detection_list, labels_list, mode):
     
     if mode == "scoring":
       for j in range(len(scores)):
-        object_id = "polyp"
+        object_id = class_list[labels[j]]
         x1 = int(detections[j][0])
         y1 = int(detections[j][1])
         x2 = int(detections[j][2])
@@ -172,8 +175,8 @@ def df_builder(scores_list, image_names, detection_list, labels_list, mode):
         
     elif mode == "detection":
       for j in range(len(scores)):
-        class_labels = ["specularity", "saturation", "artifact", "blur", "contrast", "bubbles", "instrument"]
-        object_id = class_labels[labels[j]]
+        #class_labels = ["specularity", "saturation", "artifact", "blur", "contrast", "bubbles", "instrument"]
+        object_id = class_list[labels[j]]
         x1 = int(detections[j][0])
         y1 = int(detections[j][1])
         x2 = int(detections[j][2])

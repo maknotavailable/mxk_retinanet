@@ -9,16 +9,17 @@ def label_color(label):
         A list of three values representing a RGB color.
         If no color is defined for a certain label, the color green is returned and a warning is printed.
     """
-    # specularity: pink, saturation: dark blue, artifact: light blue, blur: yellow, contrast: orange, bubbles: black, instrument: green
+    # specularity: pink, saturation: dark blue, artifact: light blue, blur: yellow, contrast: orange, bubbles: black, instrument: white
     colors = [
-      [236  , 20   , 236] ,
-      [12   , 16 , 134] ,
-      [23 , 191  , 242]   ,
-      [242 , 242  , 23]   ,
-      [242 , 156   , 8]   ,
-      [10 , 10  , 10]   ,
-      [255   , 255 , 255]  ,
-      [255 , 0   , 133] 
+      [236  , 20   , 236] , #pink
+      [12   , 16 , 134] , #navyblue
+      [23 , 191  , 242]   , #lightblue
+      [242 , 242  , 23]   , #yellow
+      [242 , 156   , 8]   , #orange
+      [10 , 10  , 10]   , #black
+      [255   , 255 , 255]  , #white
+      [255 , 51   , 51] , #red
+      [255 , 51   , 255] , #purple
     ]
     
     if label < len(colors):
@@ -26,5 +27,3 @@ def label_color(label):
     else:
         warnings.warn('Label {} has no color, returning default.'.format(label))
         return (0, 255, 0)
-
-

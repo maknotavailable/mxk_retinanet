@@ -103,6 +103,7 @@ def evaluate_polyp(
     val_dir,
     val_annotations,
     mode,
+    classes,
     iou_threshold=0.25,
     score_threshold=0.05,
     max_detections=500,
@@ -112,8 +113,9 @@ def evaluate_polyp(
     
     all_detections, image_names, detection_list, scores_list, labels_list     = _get_detections_p(generator, model, mode, score_threshold=score_threshold, max_detections=max_detections, save_path=save_path, im_threshold=im_threshold)
     # build df
-    detections_df  = df_builder(scores_list, image_names, detection_list, labels_list, mode)
-    print("# of detections: ",detections_df.shape[0])
+    detections_df  = df_builder(scores_list, image_names, detection_list, labels_list, mode, classes)
+    print("# of polyp detections: ",detections_df[detections_df["object_id"] == "polyp"].shape[0])
+    print("# of artefact detections: ",detections_df[detections_df["object_id"] != "polyp"].shape[0])
     if mode == "scoring":
       mask_dir = os.path.join(data_dir,val_dir)
       annot_csv = os.path.join(data_dir,os.path.join(data_dir,val_annotations))
