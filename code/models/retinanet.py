@@ -409,7 +409,7 @@ def retinanet_bbox(
     #print("len(model.outputs[0]): ",len(model.outputs[0]))
 
     #print("classification_artefact: ",classification_artefact.shape)
-    if len(model.outputs) > 2
+    if len(model.outputs) > 2:
         classification_artefact = model.outputs[1]
         classification_polyp    = model.outputs[2]
         #print("classification_polyp: ",classification_polyp.shape)
