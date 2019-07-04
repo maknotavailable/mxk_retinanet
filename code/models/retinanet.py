@@ -23,7 +23,7 @@ from utils.anchors import AnchorParameters
 def assert_training_model(model):
     """ Assert that the model is a training model.
     """
-    assert(all(output in model.output_names for output in ['regression', 'classification'])), \
+    assert(all(output in model.output_names for output in ['regression', 'classification']) or all(output in model.output_names for output in ['regression', 'classification_artefact', 'classification_polyp'])), \
         "Input is not a training model (no 'regression' and 'classification' outputs were found, outputs are: {}).".format(model.output_names)
 
 def default_classification_model(
@@ -34,7 +34,65 @@ def default_classification_model(
     classification_feature_size=256,
     name='classification_submodel'
 ):
-    """ Creates the default regression submodel.
+    """ Creates the default classification submodel.
+
+    Args
+        num_classes                 : Number of classes to predict a score for at each feature level.
+        num_anchors                 : Number of anchors to predict classification scores for at each feature level.
+        pyramid_feature_size        : The number of filters to expect from the feature pyramid levels.
+        classification_feature_size : The number of filters to use in the layers in the classification submodel.
+        name                        : The name of the submodel.
+
+    Returns
+        A keras.models.Model that predicts classes for each anchor.
+    """
+    options = {
+        'kernel_size' : 3,
+        'strides'     : 1,
+        'padding'     : 'same',
+    }
+
+    if keras.backend.image_data_format() == 'channels_first':
+        inputs  = keras.layers.Input(shape=(pyramid_feature_size, None, None))
+    else:
+        inputs  = keras.layers.Input(shape=(None, None, pyramid_feature_size))
+    outputs = inputs
+    # Four 3x3 conv layers
+    for i in range(4):
+        outputs = keras.layers.Conv2D(
+            filters=classification_feature_size,
+            activation='relu',
+            name='pyramid_classification_{}'.format(i),
+            kernel_initializer=keras.initializers.normal(mean=0.0, stddev=0.01, seed=None),
+            bias_initializer='zeros',
+            **options
+        )(outputs)
+
+    outputs = keras.layers.Conv2D(
+        filters=num_classes * num_anchors,
+        kernel_initializer=keras.initializers.normal(mean=0.0, stddev=0.01, seed=None),
+        bias_initializer=initializers.PriorProbability(probability=prior_probability),
+        name='pyramid_classification',
+        **options
+    )(outputs)
+
+    # reshape output and apply sigmoid
+    if keras.backend.image_data_format() == 'channels_first':
+        outputs = keras.layers.Permute((2, 3, 1), name='pyramid_classification_permute')(outputs)
+    outputs = keras.layers.Reshape((-1, num_classes), name='pyramid_classification_reshape')(outputs)
+    outputs = keras.layers.Activation('sigmoid', name='pyramid_classification_sigmoid')(outputs)
+
+    return keras.models.Model(inputs=inputs, outputs=outputs, name=name)
+
+def default_polyp_model(
+    num_classes,
+    num_anchors,
+    pyramid_feature_size=256,
+    prior_probability=0.01,
+    classification_feature_size=256,
+    name='polyp_submodel'
+):
+    """ Creates the default classification submodel.
 
     Args
         num_classes                 : Number of classes to predict a score for at each feature level.
@@ -185,6 +243,13 @@ def default_submodels(num_classes, num_anchors):
         ('classification', default_classification_model(num_classes, num_anchors))
     ]
 
+def multi_submodels(num_classes, num_anchors):
+
+    return [
+        ('regression', default_regression_model(4, num_anchors)),
+        ('classification_artefact', default_classification_model(7, num_anchors)),
+        ('classification_polyp', default_polyp_model(1, num_anchors))
+    ]
 
 def __build_model_pyramid(name, model, features):
     """ Applies a single submodel to each FPN level.
@@ -245,9 +310,9 @@ def retinanet(
     inputs,
     backbone_layers,
     num_classes,
+    train_type,
     num_anchors             = None,
     create_pyramid_features = __create_pyramid_features,
-    submodels               = None,
     name                    = 'retinanet'
 ):
     """ Construct a RetinaNet model on top of a backbone.
@@ -276,9 +341,12 @@ def retinanet(
     if num_anchors is None:
         num_anchors = AnchorParameters.default.num_anchors()
 
-    if submodels is None:
+    if train_type == "single":
         submodels = default_submodels(num_classes, num_anchors)
-
+        
+    elif train_type == "multi":
+        submodels = multi_submodels(num_classes, num_anchors)
+        
     C3, C4, C5 = backbone_layers
 
     # compute pyramid features as per https://arxiv.org/abs/1708.02002
@@ -338,10 +406,19 @@ def retinanet_bbox(
 
     # we expect the anchors, regression and classification values as first output
     regression     = model.outputs[0]
-    classification = model.outputs[1]
+    #print("len(model.outputs[0]): ",len(model.outputs[0]))
+
+    classification_artefact = model.outputs[1]
+    #print("classification_artefact: ",classification_artefact.shape)
+    classification_polyp    = model.outputs[2]
+    #print("classification_polyp: ",classification_polyp.shape)
+    classification          = keras.layers.Concatenate()([classification_artefact, classification_polyp])
+    #print("classification: ",classification.shape)
+
+
 
     # "other" can be any additional output from custom submodels, by default this will be []
-    other = model.outputs[2:]
+    #other = model.outputs[3:]
 
     # apply predicted regression to anchors
     boxes = layers.RegressBoxes(name='boxes')([anchors, regression])
@@ -352,7 +429,7 @@ def retinanet_bbox(
         nms                   = nms,
         class_specific_filter = class_specific_filter,
         name                  = 'filtered_detections'
-    )([boxes, classification] + other)
+    )([boxes, classification])
 
     # construct the model
     return keras.models.Model(inputs=model.inputs, outputs=detections, name=name)

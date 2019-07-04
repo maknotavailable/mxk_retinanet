@@ -53,7 +53,9 @@ class Generator(keras.utils.Sequence):
         positive_overlap = 0.5,
         fpn_layers = [3, 4, 5, 6, 7],
         augm = 0,
+        train_type = "multi",
         transform_parameters=None,
+        compute_anchor_targets_multiclass=anchor_targets_bbox_multiclass,
         compute_anchor_targets=anchor_targets_bbox,
         compute_shapes=guess_shapes,
         preprocess_image=preprocess_image,
@@ -83,8 +85,10 @@ class Generator(keras.utils.Sequence):
         self.positive_overlap       = positive_overlap
         self.fpn_layers             = fpn_layers
         self.augm                   = augm
+        self.train_type             = train_type
         self.transform_parameters   = transform_parameters or TransformParameters()
         self.compute_anchor_targets = compute_anchor_targets
+        self.compute_anchor_targets_multiclass = compute_anchor_targets_multiclass
         self.compute_shapes         = compute_shapes
         self.preprocess_image       = preprocess_image
         self.config                 = config
@@ -95,7 +99,7 @@ class Generator(keras.utils.Sequence):
         # Shuffle when initializing
         if self.shuffle_groups:
             self.on_epoch_end()
-
+        
     def on_epoch_end(self):
         if self.shuffle_groups:
             random.shuffle(self.groups)
@@ -279,7 +283,7 @@ class Generator(keras.utils.Sequence):
 
         if keras.backend.image_data_format() == 'channels_first':
             image_batch = image_batch.transpose((0, 3, 1, 2))
-
+        
         return image_batch
 
     def generate_anchors(self, image_shape):
@@ -295,16 +299,28 @@ class Generator(keras.utils.Sequence):
         max_shape = tuple(max(image.shape[x] for image in image_group) for x in range(3))
         anchors   = self.generate_anchors(max_shape)
 
-        batches = self.compute_anchor_targets(
-            anchors,
-            image_group,
-            annotations_group,
-            self.num_classes(),
-            self.negative_overlap,
-            self.positive_overlap
-        )
+        if self.train_type == "multi":
+            batches = self.compute_anchor_targets_multiclass(
+                anchors,
+                image_group,
+                annotations_group,
+                self.num_classes(),
+                self.negative_overlap,
+                self.positive_overlap
+            )
+        else:
+            print("guess I didn't know train_type was a thing")
+            batches = self.compute_anchor_targets(
+                anchors,
+                image_group,
+                annotations_group,
+                self.num_classes(),
+                self.negative_overlap,
+                self.positive_overlap
+            )
 
         return list(batches)
+
 
     def compute_input_output(self, group):
         """ Compute inputs and target outputs for the network.
@@ -342,6 +358,10 @@ class Generator(keras.utils.Sequence):
         Keras sequence method for generating batches.
         """
         group = self.groups[index]
-        inputs, targets = self.compute_input_output(group)
 
+        if self.train_type == "single":
+          inputs, targets = self.compute_input_output(group)
+        elif self.train_type == "multi":
+          inputs, targets = self.compute_input_output(group)
+        
         return inputs, targets
