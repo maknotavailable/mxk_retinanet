@@ -408,12 +408,15 @@ def retinanet_bbox(
     regression     = model.outputs[0]
     #print("len(model.outputs[0]): ",len(model.outputs[0]))
 
-    classification_artefact = model.outputs[1]
     #print("classification_artefact: ",classification_artefact.shape)
-    classification_polyp    = model.outputs[2]
-    #print("classification_polyp: ",classification_polyp.shape)
-    classification          = keras.layers.Concatenate()([classification_artefact, classification_polyp])
-    #print("classification: ",classification.shape)
+    if len(model.outputs) > 2
+        classification_artefact = model.outputs[1]
+        classification_polyp    = model.outputs[2]
+        #print("classification_polyp: ",classification_polyp.shape)
+        classification          = keras.layers.Concatenate()([classification_artefact, classification_polyp])
+        #print("classification: ",classification.shape)
+    else:
+        classification = model.outputs[1]
 
 
 
@@ -430,6 +433,7 @@ def retinanet_bbox(
         class_specific_filter = class_specific_filter,
         name                  = 'filtered_detections'
     )([boxes, classification])
+    
 
     # construct the model
     return keras.models.Model(inputs=model.inputs, outputs=detections, name=name)
