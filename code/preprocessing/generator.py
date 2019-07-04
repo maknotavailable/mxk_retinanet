@@ -22,6 +22,7 @@ import keras
 
 from utils.anchors import (
     anchor_targets_bbox,
+    anchor_targets_bbox_multiclass,
     anchors_for_shape,
     guess_shapes
 )
