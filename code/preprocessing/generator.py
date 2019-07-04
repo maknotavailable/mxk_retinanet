@@ -310,7 +310,6 @@ class Generator(keras.utils.Sequence):
                 self.positive_overlap
             )
         else:
-            print("guess I didn't know train_type was a thing")
             batches = self.compute_anchor_targets(
                 anchors,
                 image_group,
