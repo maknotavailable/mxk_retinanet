@@ -276,7 +276,7 @@ class Evaluate(keras.callbacks.Callback):
           
           self.classes_pure = os.path.join(self.data_dir, self.classes)
           
-          self.TP, self.FP, self.TN, self.FN, p_count = evaluate_polyp(
+          self.TP, self.FP, self.TN, self.FN, self.p_count, self.a_count = evaluate_polyp(
               self.generator,
               self.model,
               self.data_dir,
@@ -347,6 +347,16 @@ class Evaluate(keras.callbacks.Callback):
               self.tensorboard.writer.add_summary(summary, epoch)
               #run.log('f2', self.f2)
 
+              summary_value = summary.value.add()
+              summary_value.simple_value = self.p_count
+              summary_value.tag = "p_count"
+              self.tensorboard.writer.add_summary(summary, epoch)
+
+              summary_value = summary.value.add()
+              summary_value.simple_value = self.a_count
+              summary_value.tag = "a_count"
+              self.tensorboard.writer.add_summary(summary, epoch)
+
           logs['TP'] = self.TP
           logs["FP"] = self.FP
           logs["TN"] = self.TN
@@ -355,9 +365,11 @@ class Evaluate(keras.callbacks.Callback):
           logs["recall"] = self.recall
           logs["f1"] = self.f1
           logs["f2"] = self.f2
+          logs["p_count"] = self.p_count
+          logs["a_count"] = self.a_count
 
           if self.verbose == 1:
-              print("TP: %d\nFP: %d\nFN: %d\nNumber of Polyps: %d\n"%(self.TP, self.FP, self.FN, p_count))
+              print("TP: %d\nFP: %d\nFN: %d\nNumber of Polyps: %d\n"%(self.TP, self.FP, self.FN, self.p_count))
               print('precision: {:.4f}'.format(self.precision))
               print('recall: {:.4f}'.format(self.recall))
               print('f1: {:.4f}'.format(self.f1))

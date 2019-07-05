@@ -116,11 +116,12 @@ def evaluate_polyp(
     detections_df  = df_builder(scores_list, image_names, detection_list, labels_list, mode, classes)
     print("# of polyp detections: ",detections_df[detections_df["object_id"] == "polyp"].shape[0])
     print("# of artefact detections: ",detections_df[detections_df["object_id"] != "polyp"].shape[0])
+    a_count = detections_df[detections_df["object_id"] != "polyp"].shape[0]
     if mode == "scoring":
       mask_dir = os.path.join(data_dir,val_dir)
       annot_csv = os.path.join(data_dir,os.path.join(data_dir,val_annotations))
       TP, FP, TN, FN, p_count = run_validation(detections_df, annot_csv, mask_dir)
-      return TP, FP, TN, FN, p_count
+      return TP, FP, TN, FN, p_count, a_count
     elif mode == "detection":
       return detections_df
     else:
