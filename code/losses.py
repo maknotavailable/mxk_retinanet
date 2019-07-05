@@ -14,9 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import keras
+import numpy as np
 import backend
+from itertools import product
 
-def focal(c_weight=1, alpha=0.25, gamma=2.0):
+
+def focal(c_weight=1, alpha=0.25, gamma=2.0, weights_list=None):
 
     """ Create a functor for computing the focal loss.
 
@@ -47,6 +50,54 @@ def focal(c_weight=1, alpha=0.25, gamma=2.0):
         indices        = backend.where(keras.backend.not_equal(anchor_state, -1))
         labels         = backend.gather_nd(labels, indices)
         classification = backend.gather_nd(classification, indices)
+        
+        
+        # adding my own weights
+        if keras.backend.image_data_format() == 'channels_first':
+          axis = 1
+        else:
+          axis = -1
+          
+        classSelectors = keras.backend.argmax(labels, axis=axis) 
+        classSelectors = [keras.backend.equal(np.int64(i), classSelectors) for i in range(len(weights_list))]
+        classSelectors = [keras.backend.cast(x, keras.backend.floatx()) for x in classSelectors]
+        weights = [sel * w for sel,w in zip(classSelectors, weights_list)] 
+        weightMultiplier = weights[0]
+        for i in range(1, len(weights)):
+            weightMultiplier = weightMultiplier + weights[i]
+        weightMultiplier = keras.backend.expand_dims(weightMultiplier, 1)
+        weightMultiplier = keras.backend.tile(weightMultiplier, [1,8])
+            
+            
+        """
+        weights_array = np.ones((8,8))
+        i = 0
+        for w in weights_list:
+          weights_array[i,:] = w
+          i += 1
+        
+        nb_cl = len(weights_array)
+        final_mask = keras.backend.zeros_like(classification[:, 0])
+        y_pred_max = keras.backend.max(classification, axis=1)
+        y_pred_max = keras.backend.reshape(y_pred_max, (keras.backend.shape(classification)[0], 1))
+        #y_pred_max = keras.backend.expand_dims(y_pred_max, 1)
+        y_pred_max_mat = keras.backend.equal(classification, y_pred_max)
+        for c_p, c_t in product(range(nb_cl), range(nb_cl)):
+          final_mask += (keras.backend.cast(weights_array[c_t, c_p],tf.float32) * keras.backend.cast(y_pred_max_mat[:, c_p] ,tf.float32)* keras.backend.cast(labels[:, c_t],tf.float32))
+        """
+        
+            
+        # add my own weights
+        #if weight_list:
+          #weight_factor = keras.backend.zeros_like(labels)
+        #  weight_factor = keras.backend.ones_like(labels)
+        #  for i in range(len(weight_list)):
+        #    weight_factor = backend.scatter_update(weight_factor[:,:])
+        #    weight_np[:,:,i] = weight_list[i]
+        #  weight_factor    = keras.backend.variable(weight_np)
+        #else:
+        #  weight_factor = keras.backend.ones_like(labels)
+
 
         # compute the focal loss
         alpha_factor = keras.backend.ones_like(labels) * alpha
@@ -54,8 +105,9 @@ def focal(c_weight=1, alpha=0.25, gamma=2.0):
         focal_weight = backend.where(keras.backend.equal(labels, 1), 1 - classification, classification)
         focal_weight = alpha_factor * focal_weight ** gamma
 
-        cls_loss = focal_weight * keras.backend.binary_crossentropy(labels, classification)
-
+        #cls_loss = weight_factor * focal_weight * keras.backend.binary_crossentropy(labels, classification)
+        cls_loss = focal_weight * keras.backend.binary_crossentropy(labels, classification) * weightMultiplier
+        
         # compute the normalizer: the number of positive anchors
         normalizer = backend.where(keras.backend.equal(anchor_state, 1))
         normalizer = keras.backend.cast(keras.backend.shape(normalizer)[0], keras.backend.floatx())
