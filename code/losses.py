@@ -51,22 +51,23 @@ def focal(c_weight=1, alpha=0.25, gamma=2.0, weights_list=None):
         labels         = backend.gather_nd(labels, indices)
         classification = backend.gather_nd(classification, indices)
         
-        
-        # adding my own weights
-        if keras.backend.image_data_format() == 'channels_first':
-          axis = 1
-        else:
-          axis = -1
-          
-        classSelectors = keras.backend.argmax(labels, axis=axis) 
-        classSelectors = [keras.backend.equal(np.int64(i), classSelectors) for i in range(len(weights_list))]
-        classSelectors = [keras.backend.cast(x, keras.backend.floatx()) for x in classSelectors]
-        weights = [sel * w for sel,w in zip(classSelectors, weights_list)] 
-        weightMultiplier = weights[0]
-        for i in range(1, len(weights)):
-            weightMultiplier = weightMultiplier + weights[i]
-        weightMultiplier = keras.backend.expand_dims(weightMultiplier, 1)
-        weightMultiplier = keras.backend.tile(weightMultiplier, [1,8])
+        if weights_list not None:
+
+            # adding my own weights
+            if keras.backend.image_data_format() == 'channels_first':
+            axis = 1
+            else:
+            axis = -1
+            
+            classSelectors = keras.backend.argmax(labels, axis=axis) 
+            classSelectors = [keras.backend.equal(np.int64(i), classSelectors) for i in range(len(weights_list))]
+            classSelectors = [keras.backend.cast(x, keras.backend.floatx()) for x in classSelectors]
+            weights = [sel * w for sel,w in zip(classSelectors, weights_list)] 
+            weightMultiplier = weights[0]
+            for i in range(1, len(weights)):
+                weightMultiplier = weightMultiplier + weights[i]
+            weightMultiplier = keras.backend.expand_dims(weightMultiplier, 1)
+            weightMultiplier = keras.backend.tile(weightMultiplier, [1,8])
             
             
         """
