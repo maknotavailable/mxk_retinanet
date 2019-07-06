@@ -51,7 +51,7 @@ def focal(c_weight=1, alpha=0.25, gamma=2.0, weights_list=None):
         labels         = backend.gather_nd(labels, indices)
         classification = backend.gather_nd(classification, indices)
         
-        if weights_list not None:
+        if weights_list is not None:
 
             # adding my own weights
             if keras.backend.image_data_format() == 'channels_first':
