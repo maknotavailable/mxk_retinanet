@@ -55,9 +55,9 @@ def focal(c_weight=1, alpha=0.25, gamma=2.0, weights_list=None):
 
             # adding my own weights
             if keras.backend.image_data_format() == 'channels_first':
-            axis = 1
+                axis = 1
             else:
-            axis = -1
+                axis = -1
             
             classSelectors = keras.backend.argmax(labels, axis=axis) 
             classSelectors = [keras.backend.equal(np.int64(i), classSelectors) for i in range(len(weights_list))]
