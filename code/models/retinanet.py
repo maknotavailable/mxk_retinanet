@@ -113,6 +113,7 @@ def default_polyp_model(
     if keras.backend.image_data_format() == 'channels_first':
         inputs  = keras.layers.Input(shape=(pyramid_feature_size, None, None))
     else:
+        
         inputs  = keras.layers.Input(shape=(None, None, pyramid_feature_size))
     outputs = inputs
     # Four 3x3 conv layers
