@@ -113,7 +113,7 @@ def default_polyp_model(
     if keras.backend.image_data_format() == 'channels_first':
         inputs  = keras.layers.Input(shape=(pyramid_feature_size, None, None))
     else:
-        
+
         inputs  = keras.layers.Input(shape=(None, None, pyramid_feature_size))
     outputs = inputs
     # Four 3x3 conv layers
@@ -414,7 +414,7 @@ def retinanet_bbox(
         classification_artefact = model.outputs[1]
         classification_polyp    = model.outputs[2]
         #print("classification_polyp: ",classification_polyp.shape)
-        classification          = keras.layers.Concatenate()([classification_artefact, classification_polyp])
+        classification          = keras.layers.Concatenate()([classification_polyp, classification_artefact])
         #print("classification: ",classification.shape)
     else:
         classification = model.outputs[1]
