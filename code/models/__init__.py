@@ -17,7 +17,7 @@ class Backbone(object):
             'FilterDetections' : layers.FilterDetections,
             'Anchors'          : layers.Anchors,
             'ClipBoxes'        : layers.ClipBoxes,
-            '_smooth_l1'       : losses.(),
+            '_smooth_l1'       : losses.smooth_l1(),
             '_focal'           : losses.focal(),
             '_focal2'          : losses.focal2()
         }
