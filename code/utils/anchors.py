@@ -187,11 +187,11 @@ def anchor_targets_bbox_multiclass(
     
     polyp_batch[:,:,0]                                 = labels_batch[:,:,0]
     polyp_batch[:,:,-1]                                = labels_batch[:,:,-1]
-    #polyp_batch[:,:,-1][polyp_batch[:,:,0] == 0]       = 0
+    polyp_batch[:,:,-1][polyp_batch[:,:,0] == 0]       = 0
     
     artefact_batch[:,:,:-1]                            = labels_batch[:,:,1:-1]
     artefact_batch[:,:,-1]                             = labels_batch[:,:,-1]
-    #artefact_batch[:,:,-1][polyp_batch[:,:,0] == 1]    = 0
+    artefact_batch[:,:,-1][polyp_batch[:,:,0] == 1]    = 0
     
     #print("polyp_batch.shape: ",polyp_batch.shape)
     #print("artefact_batch.shape: ",artefact_batch.shape)
