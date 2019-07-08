@@ -294,6 +294,7 @@ class Evaluate(keras.callbacks.Callback):
           self.recall      = recall(self.TP,self.FN)
           self.f1          = f1(self.precision, self.recall)
           self.f2          = f2(self.precision, self.recall)
+          self.dets        = self.TP + self.FP
 
           if self.tensorboard is not None and self.tensorboard.writer is not None:
               import tensorflow as tf
@@ -348,7 +349,7 @@ class Evaluate(keras.callbacks.Callback):
               #run.log('f2', self.f2)
 
               summary_value = summary.value.add()
-              summary_value.simple_value = self.p_count
+              summary_value.simple_value = self.dets
               summary_value.tag = "p_count"
               self.tensorboard.writer.add_summary(summary, epoch)
 
@@ -365,7 +366,7 @@ class Evaluate(keras.callbacks.Callback):
           logs["recall"] = self.recall
           logs["f1"] = self.f1
           logs["f2"] = self.f2
-          logs["p_count"] = self.p_count
+          logs["p_count"] = self.dets
           logs["a_count"] = self.a_count
 
           if self.verbose == 1:
