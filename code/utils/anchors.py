@@ -183,7 +183,7 @@ def anchor_targets_bbox_multiclass(
             regression_batch[index, indices, -1] = -1
 
     polyp_batch                                        = np.zeros((labels_batch.shape[0], labels_batch.shape[1], 2))
-    artefact_batch                                     = np.zeros((labels_batch.shape[0], labels_batch.shape[1], 8))
+    artefact_batch                                     = np.zeros((labels_batch.shape[0], labels_batch.shape[1], num_classes))
     
     polyp_batch[:,:,0]                                 = labels_batch[:,:,0]
     polyp_batch[:,:,-1]                                = labels_batch[:,:,-1]
