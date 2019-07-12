@@ -248,7 +248,7 @@ def multi_submodels(num_classes, num_anchors):
 
     return [
         ('regression', default_regression_model(4, num_anchors)),
-        ('classification_artefact', default_classification_model(7, num_anchors)),
+        ('classification_artefact', default_classification_model(num_classes-1, num_anchors)),
         ('classification_polyp', default_polyp_model(1, num_anchors))
     ]
 
