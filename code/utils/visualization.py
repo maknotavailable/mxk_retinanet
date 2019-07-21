@@ -41,7 +41,7 @@ def draw_box(image, box, mode, color, thickness=2):
       cv2.putText(image, "x", (x_mid, y_mid) ,font, 0.8, color, 5, cv2.LINE_AA)
       
     elif mode == "detection":
-      thickness = 1
+      thickness = 3
       cv2.rectangle(image, (b[0], b[1]), (b[2], b[3]), color, thickness, cv2.LINE_AA)
       
 def draw_caption(image, box, caption):
@@ -53,8 +53,8 @@ def draw_caption(image, box, caption):
         caption : String containing the text to draw.
     """
     b = np.array(box).astype(int)
-    cv2.putText(image, caption, (b[0], b[1] - 10), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 0), 2)
-    cv2.putText(image, caption, (b[0], b[1] - 10), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
+    cv2.putText(image, caption, (b[0], b[1] - 10), cv2.FONT_HERSHEY_PLAIN, 3, (0, 0, 0), 2)
+    cv2.putText(image, caption, (b[0], b[1] - 10), cv2.FONT_HERSHEY_PLAIN, 3, (255, 255, 255), 1)
 
 
 def draw_boxes(image, boxes, color, thickness=2):
