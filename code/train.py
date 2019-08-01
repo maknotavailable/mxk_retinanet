@@ -16,6 +16,7 @@ limitations under the License.
 import argparse
 import os
 import sys
+import pandas as pd
 sys.path.append('./layers')
 sys.path.append('./backend')
 sys.path.append('./models')
@@ -23,10 +24,8 @@ sys.path.append('./preprocessing')
 sys.path.append('./utils')
 sys.path.append('./keras_resnet')
 
-from azureml.core import Run
-run = Run.get_context()
-
-dataset_type = 'csv'
+#from azureml.core import Run
+#run = Run.get_context()
 
 import warnings
 
@@ -84,7 +83,7 @@ def model_with_weights(model, weights, skip_mismatch):
     return model
 
 
-def create_models(fl_gamma, fl_alpha, backbone_retinanet, num_classes, weights, multi_gpu=0,
+def create_models(fl_gamma, fl_alpha, r_weight, c_weight, p_weight, train_type, sample_t, backbone_retinanet, num_classes, weights, class_weights, loss_weights, multi_gpu=0,
                   freeze_backbone=False, lr=1e-5, config=None):
     """ Creates three models (model, training_model, prediction_model).
     Args
@@ -117,22 +116,39 @@ def create_models(fl_gamma, fl_alpha, backbone_retinanet, num_classes, weights, 
             model = model_with_weights(backbone_retinanet(num_classes, num_anchors=num_anchors, modifier=modifier), weights=weights, skip_mismatch=True)
         training_model = multi_gpu_model(model, gpus=multi_gpu)
     else:
-        model          = model_with_weights(backbone_retinanet(num_classes, num_anchors=num_anchors, modifier=modifier), weights=weights, skip_mismatch=True)
+        model          = model_with_weights(backbone_retinanet(num_classes, train_type, num_anchors=num_anchors, modifier=modifier), weights=weights, skip_mismatch=True)
         training_model = model
 
     # make prediction model
     prediction_model = retinanet_bbox(model=model, anchor_params=anchor_params)
 
+    if train_type == "single":
     # compile model
-    training_model.compile(
-        loss={
-            'regression'    : losses.smooth_l1(),
-            ## HERE THE INPUT ARGUMENTS CAN BE GIVEN: default focal(alpha=0.25, gamma=2.0)
-            ## gamma: the actual "focusing parameter"
-            'classification': losses.focal(fl_alpha, fl_gamma)
-        },
-        optimizer=keras.optimizers.adam(lr=lr, clipnorm=0.001)
-    )
+    
+      training_model.compile(
+          loss={
+              'regression'    : losses.smooth_l1(r_weight),
+              ## HERE THE INPUT ARGUMENTS CAN BE GIVEN: default focal(alpha=0.25, gamma=2.0)
+              ## gamma: the actual "focusing parameter"
+              'classification': losses.focal(c_weight, fl_alpha, fl_gamma, class_weights)
+          },
+          optimizer=keras.optimizers.adam(lr=lr, clipnorm=0.001),
+          #sample_weight_mode="temporal",
+          #sample_weights=sample_t
+      )
+      
+    elif train_type == "multi":
+      training_model.compile(
+          loss={
+              'regression'    : losses.smooth_l1(r_weight),
+              ## HERE THE INPUT ARGUMENTS CAN BE GIVEN: default focal(alpha=0.25, gamma=2.0)
+              ## gamma: the actual "focusing parameter"
+              'classification_artefact': losses.focal(c_weight, fl_alpha, fl_gamma),
+              'classification_polyp': losses.focal2(p_weight, fl_alpha, fl_gamma)
+          },
+          optimizer=keras.optimizers.adam(lr=lr, clipnorm=0.001)
+          #loss_weights=loss_weights
+      )      
 
     return model, training_model, prediction_model
 
@@ -168,13 +184,13 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
 
 
     if args.evaluation and validation_generator:
-        if dataset_type == 'coco':
+        if args.dataset_type == 'coco':
             from callbacks.coco import CocoEval
 
             # use prediction model for evaluation
             evaluation = CocoEval(validation_generator, tensorboard=tensorboard_callback)
         else:
-            evaluation = Evaluate(validation_generator, score_threshold=args.score_threshold, tensorboard=tensorboard_callback, weighted_average=args.weighted_average)
+            evaluation = Evaluate(validation_generator, data_dir=args.data_dir, train_dir=args.train_dir, val_dir=args.val_dir, val_annotations=args.val_annotations, classes=args.classes, score_threshold=args.score_threshold, tensorboard=tensorboard_callback, weighted_average=args.weighted_average, dataset_type=args.dataset_type, mode=args.mode)
         evaluation = RedirectModel(evaluation, prediction_model)
         callbacks.append(evaluation)
         
@@ -186,22 +202,33 @@ def create_callbacks(model, training_model, prediction_model, validation_generat
         ## keras.callbacks.ModelCheckpoint: save model after every epoch
           
         if args.val_annotations:
-            checkpoint = keras.callbacks.ModelCheckpoint(
-                os.path.join(
-                    args.snapshot_path,
-                    '{backbone}_{dataset_type}_p{prev_epoch}_{{epoch:02d}}_{{EAD_Score:.2f}}.h5'.format(backbone=args.backbone, dataset_type=dataset_type, prev_epoch=args.previous_epoch)
-                ),
-                ## I'm adding these things to always save a model (and overwrite) if it improves the score
-                verbose=1,
-                save_best_only=False,
-                monitor="EAD_Score",
-                mode='max'
-            )
+            if args.dataset_type == 'ead':
+              checkpoint = keras.callbacks.ModelCheckpoint(
+                  os.path.join(
+                      args.snapshot_path,
+                      '{backbone}_{dataset_type}_p{prev_epoch}_{{epoch:02d}}_{{EAD_Score:.2f}}.h5'.format(backbone=args.backbone, dataset_type=args.dataset_type, prev_epoch=args.previous_epoch)
+                  ),
+                  ## I'm adding these things to always save a model (and overwrite) if it improves the score
+                  verbose=1,
+                  save_best_only=False,
+                  monitor="EAD_Score",
+                  mode='max'
+              )
+            elif args.dataset_type == 'polyp':
+              checkpoint = keras.callbacks.ModelCheckpoint(
+                  os.path.join(
+                      args.snapshot_path,
+                      '{backbone}_{dataset_type}_p{prev_epoch}_{{epoch:02d}}.h5'.format(backbone=args.backbone, dataset_type=args.dataset_type, prev_epoch=args.previous_epoch)
+                  ),
+                  ## I'm adding these things to always save a model (and overwrite) if it improves the score
+                  verbose=1,
+                  save_best_only=False,
+              )              
         else:
             checkpoint = keras.callbacks.ModelCheckpoint(
                 os.path.join(
                     args.snapshot_path,
-                    '{backbone}_{dataset_type}_p{prev_epoch}_{{epoch:02d}}.h5'.format(backbone=args.backbone, dataset_type=dataset_type, prev_epoch=args.previous_epoch)
+                    '{backbone}_{dataset_type}_p{prev_epoch}_{{epoch:02d}}_{{loss:.2f}}.h5'.format(backbone=args.backbone, dataset_type=args.dataset_type, prev_epoch=args.previous_epoch)
                 ),
                 ## I'm adding these things to always save a model (and overwrite) if it improves the score
                 verbose=1,
@@ -247,6 +274,7 @@ def create_generators(args, preprocess_image):
         'preprocess_image' : preprocess_image,
         'negative_overlap' : args.neg_overlap,
         'positive_overlap' : args.pos_overlap,
+        'train_type'       : args.train_type,
         'fpn_layers'       : fpn_layers,
         'augm'             : args.augm,
     }
@@ -280,8 +308,8 @@ def create_generators(args, preprocess_image):
     #  )
     else:
       transform_generator = random_transform_generator(flip_x_chance=0.5)
-
-    if dataset_type == 'csv':
+      
+    if args.dataset_type == 'ead' or args.dataset_type == 'polyp':
         train_generator = CSVGenerator(
             os.path.join(args.data_dir, args.annotations),
             os.path.join(args.data_dir, args.classes),
@@ -367,7 +395,8 @@ def parse_args(args):
     parser.add_argument('--image-max-side',   help='Rescale the image if the largest side is larger than max_side.', type=int, default=1333)
     parser.add_argument('--config',           help='Path to a configuration parameters .ini file.')
     parser.add_argument('--weighted-average', help='Compute the mAP using the weighted average of precisions among classes.', action='store_true')
-    ## added these maself
+    parser.add_argument('--dataset-type',     help='for validation purposes', default='polyp')
+    parser.add_argument('--mode',             help='solely detection or scoring', default='scoring')
     parser.add_argument('--fl-gamma',         help='Gamma value for Focal Loss.', type=float, default=2)
     parser.add_argument('--fl-alpha',         help='Alpha value for Focal Loss.', type=float, default=0.25)
     # parser.add_argument('--aml',  help='Log with AML services', action='store_false')
@@ -378,7 +407,13 @@ def parse_args(args):
     parser.add_argument('--pos-overlap',  help='Lower IoU Threshold for considering bbox as TP in training..', default=0.5, type=float)
     parser.add_argument('--fpn-layers',   help='Number of FPN Layers to use. Either 4 or 5.', default=5, type=int)
     parser.add_argument('--augm',         help='Which augmentation to use', default=0, type=int)
-    parser.add_argument('--im-count',   help='How many images are in the train set.', default=1800, type=int)
+    #parser.add_argument('--im-count',   help='How many images are in the train set.', default=1800, type=int)
+    parser.add_argument('--c-weight',     help='weight of classification loss', default=1, type=int)
+    parser.add_argument('--r-weight',     help='weight of regression loss', default=1, type=int)
+    parser.add_argument('--p-weight',     help='weight of polyp loss', default=1, type=int)
+    parser.add_argument('--loss-weights',     help='weight for different loss functions', default=None, type=str)
+    parser.add_argument('--train-type',   help='whether we doing multitask or not', default="single", type=str)
+    parser.add_argument('--class-weights',   help='weights of different classes', default=None, )
 
     # Fit generator arguments
     parser.add_argument('--workers', help='Number of multiprocessing workers. To disable multiprocessing, set workers to 0', type=int, default=1)
@@ -394,7 +429,9 @@ def main(args=None):
     args = parse_args(args)
 
     # create object that stores backbone information
+    #backbone = models.backbone(args.backbone)
     backbone = models.backbone(args.backbone)
+    
 
     # make sure keras is the minimum required version
     check_keras_version()
@@ -409,16 +446,43 @@ def main(args=None):
         args.config = read_config_file(args.config)
 
     # create the generators
+    #print(args)
     train_generator, validation_generator = create_generators(args, backbone.preprocess_image)
     
     # Log configs
-    run.log('batch-size', args.batch_size)
-    run.log('gamma', args.fl_gamma)
-    run.log('alpha', args.fl_alpha)
-    run.log('lr', args.lr)
-    run.log('neg-overlap', args.neg_overlap)
-    run.log('pos-overlap', args.pos_overlap)
-    run.log('fpn-layers', args.fpn_layers)
+    #run.log('batch-size', args.batch_size)
+    #run.log('gamma', args.fl_gamma)
+    #run.log('alpha', args.fl_alpha)
+    #run.log('lr', args.lr)
+    #run.log('neg-overlap', args.neg_overlap)
+    #run.log('pos-overlap', args.pos_overlap)
+    #run.log('fpn-layers', args.fpn_layers)
+    
+    if args.class_weights is not None:    
+      if args.class_weights == "cw1":
+        polyp_weight  = 0.25
+        #class_weights = {'classification': {0:a_w, 1:a_w, 2:a_w, 3:a_w, 4:a_w, 5:a_w, 6:a_w, 7:polyp_weight}, 'regression': {0:0.25, 1:0.25, 2:0.25, 3:0.25}}
+        #class_weights = {'classification': [polyp_weight, a_w, a_w, a_w, a_w, a_w, a_w, a_w]}
+      elif args.class_weights == "cw2":
+        polyp_weight  = 0.5
+      elif args.class_weights == "cw3":
+        polyp_weight  = 0.75
+      a_w           = (1-polyp_weight)/7
+      #class_weights = {'classification': [polyp_weight, a_w, a_w, a_w, a_w, a_w, a_w, a_w]}  
+      class_weights = [polyp_weight, a_w, a_w, a_w, a_w, a_w, a_w, a_w]
+    else:
+      class_weights = None
+    
+    if args.loss_weights is None:
+      loss_weights = [1, 1]
+    elif args.loss_weights == "lw0":
+      loss_weights = [1, 1, 1]
+    elif args.loss_weights == "lw1":
+      loss_weights = [1, 1, 3]
+    elif args.loss_weights == "lw2":
+      loss_weights = [1, 1, 10]
+    elif args.loss_weights == "lw3":
+      loss_weights = [1, 1, 20]    
     
     # create the model
     if args.snapshot is not None:
@@ -433,22 +497,29 @@ def main(args=None):
         if args.weights is None and args.imagenet_weights:
           weights = backbone.download_imagenet()
         else:
-          weights = os.path.join(args.data_dir, args.weights)
+          weights = args.weights
         # default to imagenet if nothing else is specified
         ## SO the file that is downloaded is actually only the weights
         ## this means that I should be able to use --weights to give it my own model
-
+        sample_test = np.array([[0.25,0.25,0.25,0.25, 0, 0, 0, 0],[10,10,10,10,10,10,10,10]])
         print('Creating model, this may take a second...')
         model, training_model, prediction_model = create_models(
             backbone_retinanet=backbone.retinanet,
             num_classes=train_generator.num_classes(),
             weights=weights,
+            class_weights=class_weights,
+            loss_weights=loss_weights,
             multi_gpu=args.multi_gpu,
             freeze_backbone=args.freeze_backbone,
             lr=args.lr,
             config=args.config,
             fl_gamma = args.fl_gamma,
-            fl_alpha = args.fl_alpha
+            fl_alpha = args.fl_alpha,
+            c_weight = args.c_weight,
+            r_weight = args.r_weight,
+            p_weight = args.p_weight,
+            train_type = args.train_type,
+            sample_t = sample_test
         )
 
     # print model summary
@@ -474,17 +545,22 @@ def main(args=None):
         use_multiprocessing = True
     else:
         use_multiprocessing = False
+        
+    temp_df = pd.read_csv(os.path.join(args.data_dir, args.annotations), names=["image_path", "x1", "y1", "x2", "y2", "object_id"])
+    im_count = len(set(list(temp_df.image_path)))
+   
 
     # start training
     training_model.fit_generator(
         generator=train_generator,
-        steps_per_epoch=int(args.im_count/args.batch_size),
+        steps_per_epoch=int(im_count/args.batch_size),
         epochs=args.epochs,
         verbose=1,
         callbacks=callbacks,
         workers=args.workers,
         use_multiprocessing=use_multiprocessing,
         max_queue_size=args.max_queue_size
+        #class_weight=class_weights
     )
 
 
